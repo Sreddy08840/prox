@@ -1,0 +1,369 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum UserRole {
+  ADMIN
+  SALES_MANAGER
+  SALES_AGENT
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  INVITED
+}
+
+enum ProjectStatus {
+  PLANNING
+  UNDER_CONSTRUCTION
+  COMPLETED
+  CANCELLED
+}
+
+enum UnitStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  RENTED
+  MAINTENANCE
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  NEGOTIATING
+  WON
+  LOST
+}
+
+enum SenderType {
+  USER
+  LEAD
+  AI
+}
+
+enum ActivityType {
+  NOTE
+  CALL
+  EMAIL
+  MEETING
+  STATUS_CHANGE
+  TASK
+}
+
+// ==========================================
+// MODELS
+// ==========================================
+
+model Organization {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Soft delete support
+
+  // Relations
+  users     User[]
+  projects  Project[]
+  unitTypes UnitType[]
+  leads     Lead[]
+  auditLogs AuditLog[]
+  apiKeys   ApiKey[]
+
+  @@index([slug])
+  @@map("organizations")
+}
+
+model User {
+  id                   String        @id @default(uuid()) @db.Uuid
+  email                String        @unique
+  password             String
+  firstName            String?
+  lastName             String?
+  role                 UserRole      @default(VIEWER)
+  status               UserStatus    @default(INVITED)
+  organizationId       String?       @db.Uuid // Nullable only for SUPER_ADMIN
+  tokenVersion         Int           @default(0) // Revoke refresh tokens on security events
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  invitationToken      String?       @unique
+  invitationExpires    DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  deletedAt            DateTime?     // Soft delete support
+
+  // Relations
+  organization         Organization? @relation(fields: [organizationId], references: [id])
+  assignedLeads        Lead[]        @relation("AssignedUser")
+  sentMessages         Message[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+
+  @@index([email])
+  @@index([organizationId])
+  @@map("users")
+}
+
+model Project {
+  id             String        @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  address        String?
+  city           String?
+  status         ProjectStatus @default(PLANNING)
+  launchDate     DateTime?
+  organizationId String        @db.Uuid
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?     // Soft delete support
+
+  // Relations
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  units          Unit[]
+  unitTypes      UnitType[]
+
+  @@index([organizationId])
+  @@map("projects")
+}
+
+model UnitType {
+  id             String       @id @default(uuid()) @db.Uuid
+  name           String       // E.g., "2 BHK Apartment", "Penthouse Suite A"
+  bedrooms       Int?
+  bathrooms      Float?
+  sizeSqFt       Float?
+  basePrice      Decimal?     @db.Decimal(12, 2)
+  projectId      String       @db.Uuid
+  organizationId String       @db.Uuid
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?    // Soft delete support
+
+  // Relations
+  project        Project      @relation(fields: [projectId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  units          Unit[]
+
+  @@index([projectId])
+  @@index([organizationId])
+  @@map("unit_types")
+}
+
+model Unit {
+  id         String     @id @default(uuid()) @db.Uuid
+  unitNumber String     // E.g., "A-102"
+  floor      Int?
+  status     UnitStatus @default(AVAILABLE)
+  price      Decimal?   @db.Decimal(12, 2)
+  areaSqFt   Float?
+  facing     String?
+  unitTypeId String     @db.Uuid
+  projectId  String     @db.Uuid
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deletedAt  DateTime?  // Soft delete support
+
+  // Relations
+  unitType   UnitType   @relation(fields: [unitTypeId], references: [id])
+  project    Project    @relation(fields: [projectId], references: [id])
+  leads      Lead[]     @relation("PreferredUnit")
+
+  @@index([unitTypeId])
+  @@index([projectId])
+  @@map("units")
+}
+
+model Lead {
+  id              String         @id @default(uuid()) @db.Uuid
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  status          LeadStatus     @default(NEW)
+  source          String?        // E.g., "Website", "Walk-in", "Referral"
+  budget          Decimal?       @db.Decimal(12, 2)
+  timeline        String?        // E.g., "Immediate", "3-6 months"
+  financingStatus String?        // E.g., "Pre-approved", "Cash buyer"
+  notes           String?
+  organizationId  String         @db.Uuid
+  assignedUserId  String?        @db.Uuid
+  preferredUnitId String?        @db.Uuid
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?      // Soft delete support
+
+  // Relations
+  organization    Organization   @relation(fields: [organizationId], references: [id])
+  assignedUser    User?          @relation("AssignedUser", fields: [assignedUserId], references: [id])
+  preferredUnit   Unit?          @relation("PreferredUnit", fields: [preferredUnitId], references: [id])
+  conversations   Conversation[]
+  activities      LeadActivity[]
+  aiInsight       AiInsight?
+
+  @@index([organizationId])
+  @@index([assignedUserId])
+  @@index([status])
+  @@map("leads")
+}
+
+model AiInsight {
+  id              String   @id @default(uuid()) @db.Uuid
+  leadId          String   @unique @db.Uuid
+  budget          Decimal? @db.Decimal(12, 2)
+  preferredUnit   String?
+  timeline        String?
+  financingStatus String?
+  intent          String?
+  leadScore       String   // "HOT", "WARM", "COLD"
+  reasoning       String?  @db.Text
+  rawResponse     String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  lead            Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@map("ai_insights")
+}
+
+model Conversation {
+  id        String    @id @default(uuid()) @db.Uuid
+  leadId    String    @db.Uuid
+  subject   String?
+  summary   String?   @db.Text
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  lead      Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@index([leadId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  senderId       String?      @db.Uuid // Null if sent by the lead/external customer
+  senderType     SenderType
+  content        String
+  attachments    Json?
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User?        @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model LeadActivity {
+  id          String       @id @default(uuid()) @db.Uuid
+  leadId      String       @db.Uuid
+  type        ActivityType
+  description String
+  createdAt   DateTime     @default(now())
+
+  // Relations
+  lead        Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("lead_activities")
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  userId         String?      @db.Uuid // Nullable for system-triggered events
+  action         String       // E.g., "USER_LOGIN", "LEAD_UPDATE", "UNIT_SOLD"
+  entityName     String       // E.g., "Lead", "Unit", "User"
+  entityId       String?
+  oldValues      Json?
+  newValues      Json?
+  ipAddress      String?
+  createdAt      DateTime     @default(now())
+
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  user           User?        @relation(fields: [userId], references: [id])
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([entityName, entityId])
+  @@map("audit_logs")
+}
+
+model FailedMessage {
+  id             String   @id @default(uuid()) @db.Uuid
+  recipientPhone String
+  content        String
+  errorMsg       String?
+  attempts       Int      @default(0)
+  nextRetry      DateTime @default(now())
+  status         String   @default("FAILED") // FAILED, RETRYING, SENT, PERMANENT_FAILURE
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("failed_messages")
+}
+
+model ApiKey {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  name           String       // E.g. "WhatsApp API Key"
+  key            String       @unique
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("api_keys")
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique // E.g. "MAINTENANCE_MODE", "AI_PROVIDER"
+  value       String   // String or JSON
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}

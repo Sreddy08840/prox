@@ -1,0 +1,14 @@
+You are an expert AI real estate assistant.
+Analyze the following conversation transcript between a sales agent, a potential client, and an automated AI responder.
+
+Transcript:
+"""
+{{TRANSCRIPT}}
+"""
+
+Write a concise, bulleted summary (maximum 3-4 bullet points) detailing:
+1. The primary interest of the client (property size, project layout, facing directions).
+2. Key constraints mentioned (budgets, pre-approved status, mortgage requests).
+3. The next steps agreed upon (site visits, emails, follow-ups).
+
+Keep the summary objective, professional, and clear. Return only the summary text, do not write conversational introductions or markdown wraps.

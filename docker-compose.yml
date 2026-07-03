@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # Database Service
+  postgres:
+    image: postgres:15-alpine
+    container_name: propx-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: propx_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Santosh@1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Caching Service
+  redis:
+    image: redis:7-alpine
+    container_name: propx-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Express API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: propx-backend
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - DATABASE_URL=postgresql://postgres:Santosh%401234@postgres:5432/propx_db?schema=public
+      - JWT_SECRET=production_secret_key_12345
+      - WHATSAPP_VERIFY_TOKEN=propx_token
+      - WHATSAPP_TOKEN=mock_token
+      - WHATSAPP_PHONE_NUMBER_ID=mock_number_id
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Frontend Nginx Proxy Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: propx-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
