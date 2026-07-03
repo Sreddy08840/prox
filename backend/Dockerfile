@@ -4,7 +4,8 @@ FROM node:20-alpine AS builder
 WORKDIR /usr/src/app
 
 # Install dependencies needed for node-gyp or alpine builds
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 make g++ openssl
+
 
 COPY package*.json ./
 COPY prisma ./prisma/
@@ -27,6 +28,9 @@ FROM node:20-alpine AS runner
 WORKDIR /usr/src/app
 
 ENV NODE_ENV=production
+
+RUN apk add --no-cache openssl
+
 
 COPY --from=builder /usr/src/app/package*.json ./
 COPY --from=builder /usr/src/app/node_modules ./node_modules
