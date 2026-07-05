@@ -29,7 +29,7 @@ server {
     # Reverse proxy for backend API calls
     location /api {
         resolver 8.8.8.8 1.1.1.1 valid=30s;
-        set $backend_service "${BACKEND_URL}";
+        set $backend_service "https://${BACKEND_HOST}.onrender.com";
         proxy_pass $backend_service;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
