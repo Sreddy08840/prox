@@ -22,6 +22,8 @@ dotenv.config();
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // Standard Middlewares
 app.use(helmet());
 app.use(rateLimiter);

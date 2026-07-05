@@ -37,6 +37,8 @@ services:
         value: mock_token
       - key: WHATSAPP_PHONE_NUMBER_ID
         value: mock_number_id
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 1000
 
   - type: web
     name: frontend
