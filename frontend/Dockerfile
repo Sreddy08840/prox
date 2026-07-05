@@ -17,4 +17,4 @@ COPY nginx.conf.template /etc/nginx/nginx.conf.template
 
 EXPOSE 80
 
-CMD ["sh", "-c", "export RESOLVER_IP=$(grep -i '^nameserver' /etc/resolv.conf | awk '{print $2}' | tr '\\n' ' ') && envsubst '${RESOLVER_IP} ${BACKEND_HOST}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "export RESOLVER_IP=$(grep -i '^nameserver' /etc/resolv.conf | awk '{print $2}' | tr '\n' ' ') && envsubst '${RESOLVER_IP} ${BACKEND_HOST} ${PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
