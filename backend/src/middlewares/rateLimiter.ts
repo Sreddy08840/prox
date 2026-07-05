@@ -6,6 +6,7 @@ const max = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10); // Limit
 export const rateLimiter = rateLimit({
   windowMs,
   max,
+  skip: () => process.env.NODE_ENV === 'development',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: {

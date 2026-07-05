@@ -10,6 +10,7 @@ import Leads from './pages/Leads';
 import LeadDetail from './pages/LeadDetail';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
+import Tenants from './pages/Tenants';
 import api from './services/api';
 import NotificationCenter from './components/NotificationCenter';
 
@@ -292,15 +293,7 @@ function App() {
                     <Route path="/projects/:id" element={<ProjectDetail />} />
                     <Route path="/leads" element={<Leads />} />
                     <Route path="/leads/:id" element={<LeadDetail />} />
-                    <Route
-                      path="/tenants"
-                      element={
-                        <div className="border rounded-xl bg-card p-6 shadow-sm">
-                          <h2 className="text-xl font-bold mb-2">Tenants Directory</h2>
-                          <p className="text-muted-foreground text-sm">Manage tenant records and lease agreements.</p>
-                        </div>
-                      }
-                    />
+                    <Route path="/tenants" element={<Tenants />} />
                     <Route
                       path="/settings"
                       element={<SettingsPage currentUser={currentUser} />}

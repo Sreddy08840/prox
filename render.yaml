@@ -1,0 +1,48 @@
+databases:
+  - name: propx-postgres
+    databaseName: propx_db
+    user: postgres
+    plan: free
+
+services:
+  - type: redis
+    name: propx-redis
+    plan: free
+    ipAllowList: [] # Only allow internal connection
+
+  - type: web
+    name: backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: propx-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: propx-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: WHATSAPP_VERIFY_TOKEN
+        value: propx_token
+      - key: WHATSAPP_TOKEN
+        value: mock_token
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        value: mock_number_id
+
+  - type: web
+    name: frontend
+    env: docker
+    dockerfilePath: ./frontend/Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 80

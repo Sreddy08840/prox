@@ -13,6 +13,7 @@ import dashboardRouter from './routes/dashboardRoutes';
 import notificationRouter from './routes/notificationRoutes';
 import whatsappRouter from './routes/whatsappRoutes';
 import adminRouter from './routes/adminRoutes';
+import tenantRouter from './routes/tenantRoutes';
 import helmet from 'helmet';
 import rateLimiter from './middlewares/rateLimiter';
 import healthRouter from './routes/healthRoutes';
@@ -44,6 +45,7 @@ app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/notifications', notificationRouter);
 app.use('/api/v1/whatsapp', whatsappRouter);
 app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/tenants', tenantRouter);
 
 interface AppError extends Error {
   statusCode?: number;

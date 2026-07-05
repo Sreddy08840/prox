@@ -9,10 +9,10 @@ export const validate = (schema: AnyZodObject) => {
         query: req.query,
         params: req.params,
       });
-      // Replace req objects with parsed typesafe versions
-      req.body = parsed.body;
-      req.query = parsed.query;
-      req.params = parsed.params;
+      // Replace req objects with parsed typesafe versions if defined
+      if (parsed.body !== undefined) req.body = parsed.body;
+      if (parsed.query !== undefined) req.query = parsed.query;
+      if (parsed.params !== undefined) req.params = parsed.params;
       next();
     } catch (error) {
       if (error instanceof ZodError) {

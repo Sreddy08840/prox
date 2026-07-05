@@ -85,6 +85,8 @@ model Organization {
   leads     Lead[]
   auditLogs AuditLog[]
   apiKeys   ApiKey[]
+  tenants   Tenant[]
+  leases    Lease[]
 
   @@index([slug])
   @@map("organizations")
@@ -183,6 +185,7 @@ model Unit {
   unitType   UnitType   @relation(fields: [unitTypeId], references: [id])
   project    Project    @relation(fields: [projectId], references: [id])
   leads      Lead[]     @relation("PreferredUnit")
+  leases     Lease[]
 
   @@index([unitTypeId])
   @@index([projectId])
@@ -366,4 +369,60 @@ model SystemSetting {
   updatedAt   DateTime @updatedAt
 
   @@map("system_settings")
+}
+
+// ==========================================
+// TENANTS & LEASES MODELS
+// ==========================================
+
+enum LeaseStatus {
+  ACTIVE
+  TERMINATED
+  EXPIRED
+  UPCOMING
+}
+
+model Tenant {
+  id             String        @id @default(uuid()) @db.Uuid
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  organizationId String        @db.Uuid
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?     // Soft delete support
+
+  // Relations
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leases         Lease[]
+
+  @@index([organizationId])
+  @@map("tenants")
+}
+
+model Lease {
+  id             String       @id @default(uuid()) @db.Uuid
+  tenantId       String       @db.Uuid
+  unitId         String       @db.Uuid
+  organizationId String       @db.Uuid
+  startDate      DateTime
+  endDate        DateTime
+  rentAmount     Decimal      @db.Decimal(12, 2)
+  depositAmount  Decimal?     @db.Decimal(12, 2)
+  status         LeaseStatus  @default(ACTIVE)
+  notes          String?      @db.Text
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?    // Soft delete support
+
+  // Relations
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  unit           Unit         @relation(fields: [unitId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([unitId])
+  @@index([organizationId])
+  @@map("leases")
 }
