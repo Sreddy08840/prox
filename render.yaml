@@ -47,8 +47,5 @@ services:
     envVars:
       - key: PORT
         value: 10000
-      - key: BACKEND_HOST
-        fromService:
-          name: backend
-          type: web
-          property: host
+      - key: BACKEND_URL
+        sync: false
