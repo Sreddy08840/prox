@@ -47,3 +47,8 @@ services:
     envVars:
       - key: PORT
         value: 80
+      - key: BACKEND_HOST
+        fromService:
+          name: backend
+          type: web
+          property: host
