@@ -17,4 +17,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "-c", "sed -i \"s/RESOLVER_IP/$(grep -i '^nameserver' /etc/resolv.conf | head -n1 | awk '{print $2}')/g\" /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
