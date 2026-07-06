@@ -83,9 +83,60 @@ export const getUnitTypes = async (
       },
     });
 
+    const enrichedUnitTypes = await Promise.all(
+      unitTypes.map(async (type) => {
+        const totalCount = await prisma.unit.count({
+          where: { unitTypeId: type.id, deletedAt: null },
+        });
+
+        const availableCount = await prisma.unit.count({
+          where: { unitTypeId: type.id, status: 'AVAILABLE', deletedAt: null },
+        });
+
+        // Count interested qualified leads
+        const interestedLeadsCount = await prisma.lead.count({
+          where: {
+            deletedAt: null,
+            status: { in: ['NEW', 'CONTACTED', 'QUALIFIED', 'NEGOTIATING'] },
+            OR: [
+              {
+                preferredUnit: {
+                  unitTypeId: type.id,
+                },
+              },
+              {
+                aiInsight: {
+                  preferredUnit: {
+                    contains: type.name.split(' ')[0], // simple keyword match e.g. "2" or "3" for "2 BHK"
+                    mode: 'insensitive',
+                  },
+                },
+              },
+            ],
+          },
+        });
+
+        // Determine pricing sensitivity signal
+        let signal: 'OPPORTUNITY' | 'RISK' | 'NORMAL' = 'NORMAL';
+        if (availableCount <= 3 && interestedLeadsCount >= 2) {
+          signal = 'OPPORTUNITY';
+        } else if (availableCount >= 5 && interestedLeadsCount === 0) {
+          signal = 'RISK';
+        }
+
+        return {
+          ...type,
+          totalUnits: totalCount,
+          availableUnits: availableCount,
+          demandHeat: interestedLeadsCount,
+          pricingSignal: signal,
+        };
+      })
+    );
+
     res.status(200).json({
       success: true,
-      data: unitTypes,
+      data: enrichedUnitTypes,
     });
   } catch (error) {
     next(error);

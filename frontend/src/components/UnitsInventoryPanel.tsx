@@ -5,7 +5,7 @@ import {
   Loader2,
   Plus,
   Search,
-  DollarSign,
+  IndianRupee,
   Home,
   CheckCircle,
   AlertCircle,
@@ -340,18 +340,18 @@ export default function UnitsInventoryPanel({ projectId }: UnitsInventoryPanelPr
                   Portfolio Value
                 </span>
                 <h4 className="text-xl font-black text-foreground mt-1 flex items-center">
-                  <DollarSign size={16} className="text-emerald-500 shrink-0" />
-                  {parseFloat(stats.totalPortfolioValue).toLocaleString(undefined, {
+                  <IndianRupee size={16} className="text-emerald-500 shrink-0" />
+                  {parseFloat(stats.totalPortfolioValue).toLocaleString('en-IN', {
                     maximumFractionDigits: 0,
                   })}
                 </h4>
               </div>
               <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg">
-                <DollarSign size={16} />
+                <IndianRupee size={16} />
               </div>
             </div>
             <div className="text-[10px] text-muted-foreground mt-2">
-              Avg price: ${parseFloat(stats.averagePrice).toLocaleString(undefined, {
+              Avg price: ₹{parseFloat(stats.averagePrice).toLocaleString('en-IN', {
                 maximumFractionDigits: 0,
               })}
             </div>
@@ -408,8 +408,8 @@ export default function UnitsInventoryPanel({ projectId }: UnitsInventoryPanelPr
                   Realized Book Value
                 </span>
                 <h4 className="text-xl font-black text-foreground mt-1 flex items-center text-emerald-600">
-                  <DollarSign size={16} className="shrink-0" />
-                  {parseFloat(stats.soldPortfolioValue).toLocaleString(undefined, {
+                  <IndianRupee size={16} className="shrink-0" />
+                  {parseFloat(stats.soldPortfolioValue).toLocaleString('en-IN', {
                     maximumFractionDigits: 0,
                   })}
                 </h4>
@@ -564,7 +564,7 @@ export default function UnitsInventoryPanel({ projectId }: UnitsInventoryPanelPr
                     {/* Price */}
                     <td className="px-5 py-3 text-right font-black text-foreground">
                       {unit.price
-                        ? `$${parseFloat(unit.price).toLocaleString(undefined, {
+                        ? `₹${parseFloat(unit.price).toLocaleString('en-IN', {
                             minimumFractionDigits: 0,
                           })}`
                         : '—'}

@@ -6,7 +6,7 @@ import {
   Sparkles,
   AlertCircle,
   TrendingUp,
-  DollarSign,
+  IndianRupee,
   Calendar,
   Layers,
   Compass,
@@ -32,6 +32,16 @@ export default function AiInsightsPanel({ leadId }: AiInsightsPanelProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+
+  // Score Override Edit State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editScore, setEditScore] = useState<'HOT' | 'WARM' | 'COLD'>('WARM');
+  const [editReasoning, setEditReasoning] = useState('');
+  const [editBudget, setEditBudget] = useState<number>(0);
+  const [editPreferredUnit, setEditPreferredUnit] = useState('');
+  const [editTimeline, setEditTimeline] = useState('');
+  const [editFinancing, setEditFinancing] = useState('');
+  const [savingOverride, setSavingOverride] = useState(false);
 
   const fetchInsight = useCallback(async () => {
     setLoading(true);
@@ -70,6 +80,53 @@ export default function AiInsightsPanel({ leadId }: AiInsightsPanelProps) {
       }
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const startOverride = () => {
+    if (insight) {
+      setEditScore(insight.leadScore);
+      setEditReasoning(insight.reasoning || '');
+      setEditBudget(insight.budget ? parseFloat(insight.budget) : 0);
+      setEditPreferredUnit(insight.preferredUnit || '');
+      setEditTimeline(insight.timeline || '');
+      setEditFinancing(insight.financingStatus || '');
+    } else {
+      setEditScore('WARM');
+      setEditReasoning('');
+      setEditBudget(0);
+      setEditPreferredUnit('');
+      setEditTimeline('');
+      setEditFinancing('');
+    }
+    setIsEditing(true);
+  };
+
+  const handleSaveOverride = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingOverride(true);
+    setError(null);
+    try {
+      const response = await api.put(`/ai/${leadId}/insight`, {
+        leadScore: editScore,
+        reasoning: editReasoning,
+        budget: editBudget || null,
+        preferredUnit: editPreferredUnit || null,
+        timeline: editTimeline || null,
+        financingStatus: editFinancing || null,
+      });
+      if (response.data.success) {
+        setInsight(response.data.data);
+        setIsEditing(false);
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.error?.message || 'Failed to override score details');
+      } else {
+        setError('Failed to override score details');
+      }
+    } finally {
+      setSavingOverride(false);
     }
   };
 
@@ -140,99 +197,221 @@ export default function AiInsightsPanel({ leadId }: AiInsightsPanelProps) {
                 </h4>
               </div>
 
-              {/* Run analyze button inside header */}
+              {/* Run analyze/override button inside header */}
+              <div className="flex items-center space-x-1.5">
+                <button
+                  type="button"
+                  onClick={startOverride}
+                  className="flex items-center space-x-1 rounded-lg border border-input px-2.5 py-1.5 text-[10px] font-bold hover:bg-accent transition-all text-muted-foreground hover:text-foreground"
+                >
+                  Override
+                </button>
+                <button
+                  disabled={analyzing}
+                  onClick={handleAnalyze}
+                  className="flex items-center space-x-1 rounded-lg border border-input px-2.5 py-1.5 text-[10px] font-bold hover:bg-accent transition-all text-muted-foreground hover:text-foreground"
+                >
+                  {analyzing ? (
+                    <Loader2 className="animate-spin" size={10} />
+                  ) : (
+                    <Sparkles size={10} />
+                  )}
+                  <span>Recalculate</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {isEditing ? (
+            <form onSubmit={handleSaveOverride} className="rounded-xl border bg-card p-4 space-y-3.5 text-[11px]">
+              <div className="flex items-center justify-between border-b pb-2">
+                <span className="font-bold text-foreground">Override AI Lead Scoring</span>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="text-xs text-muted-foreground hover:underline"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <div>
+                <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                  Lead Score
+                </label>
+                <div className="flex space-x-2">
+                  {(['HOT', 'WARM', 'COLD'] as const).map((sc) => (
+                    <button
+                      key={sc}
+                      type="button"
+                      onClick={() => setEditScore(sc)}
+                      className={`flex-1 py-1 rounded-lg border text-xs font-bold transition-all ${
+                        editScore === sc
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          : 'bg-background hover:bg-accent text-muted-foreground'
+                      }`}
+                    >
+                      {sc}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
+                    Budget (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={editBudget}
+                    onChange={(e) => setEditBudget(Number(e.target.value))}
+                    className="w-full px-2 py-1 border rounded-lg bg-background text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
+                    Preferred Layout
+                  </label>
+                  <input
+                    type="text"
+                    value={editPreferredUnit}
+                    onChange={(e) => setEditPreferredUnit(e.target.value)}
+                    className="w-full px-2 py-1 border rounded-lg bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="E.g. 2 BHK"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
+                    Timeline
+                  </label>
+                  <input
+                    type="text"
+                    value={editTimeline}
+                    onChange={(e) => setEditTimeline(e.target.value)}
+                    className="w-full px-2 py-1 border rounded-lg bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="E.g. 3 months"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
+                    Financing Status
+                  </label>
+                  <input
+                    type="text"
+                    value={editFinancing}
+                    onChange={(e) => setEditFinancing(e.target.value)}
+                    className="w-full px-2 py-1 border rounded-lg bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="E.g. Seeking bank loan"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
+                  Overridden Reasoning / Notes
+                </label>
+                <textarea
+                  required
+                  value={editReasoning}
+                  onChange={(e) => setEditReasoning(e.target.value)}
+                  className="w-full px-2 py-1 border rounded-lg bg-background text-xs h-14 resize-none text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="Describe your reasoning..."
+                />
+              </div>
+
               <button
-                disabled={analyzing}
-                onClick={handleAnalyze}
-                className="flex items-center space-x-1.5 rounded-lg border border-input px-3 py-1.5 text-[10px] font-bold hover:bg-accent transition-all text-muted-foreground hover:text-foreground"
+                type="submit"
+                disabled={savingOverride}
+                className="w-full flex justify-center items-center py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-lg hover:bg-primary/95 transition-all shadow-sm"
               >
-                {analyzing ? (
-                  <Loader2 className="animate-spin" size={12} />
-                ) : (
-                  <Sparkles size={12} />
-                )}
-                <span>Recalculate</span>
+                {savingOverride ? <Loader2 className="animate-spin" size={12} /> : 'Save Override'}
               </button>
-            </div>
-          </div>
+            </form>
+          ) : (
+            <>
+              {/* Details Grid */}
+              <div className="grid grid-cols-2 gap-3 text-[11px]">
+                {/* Budget */}
+                <div className="border rounded-lg p-2.5 space-y-1 bg-muted/20">
+                  <div className="flex items-center space-x-1 text-muted-foreground font-semibold">
+                    <IndianRupee size={13} className="text-emerald-500" />
+                    <span>Extracted Budget</span>
+                  </div>
+                  <div className="font-extrabold text-foreground">
+                    {insight.budget ? (
+                      `₹${parseFloat(insight.budget).toLocaleString('en-IN', {
+                        maximumFractionDigits: 0,
+                      })}`
+                    ) : (
+                      <span className="text-muted-foreground/60">Not stated</span>
+                    )}
+                  </div>
+                </div>
 
-          {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-3 text-[11px]">
-            {/* Budget */}
-            <div className="border rounded-lg p-2.5 space-y-1 bg-muted/20">
-              <div className="flex items-center space-x-1 text-muted-foreground font-semibold">
-                <DollarSign size={13} className="text-emerald-500" />
-                <span>Extracted Budget</span>
-              </div>
-              <div className="font-extrabold text-foreground">
-                {insight.budget ? (
-                  `$${parseFloat(insight.budget).toLocaleString(undefined, {
-                    maximumFractionDigits: 0,
-                  })}`
-                ) : (
-                  <span className="text-muted-foreground/60">Not stated</span>
-                )}
-              </div>
-            </div>
+                {/* Preferred Unit */}
+                <div className="border rounded-lg p-2.5 space-y-1 bg-muted/20">
+                  <div className="flex items-center space-x-1 text-muted-foreground font-semibold">
+                    <Layers size={13} className="text-primary/70" />
+                    <span>Preferred Layout</span>
+                  </div>
+                  <div className="font-bold text-foreground truncate">
+                    {insight.preferredUnit || <span className="text-muted-foreground/60">Not specified</span>}
+                  </div>
+                </div>
 
-            {/* Preferred Unit */}
-            <div className="border rounded-lg p-2.5 space-y-1 bg-muted/20">
-              <div className="flex items-center space-x-1 text-muted-foreground font-semibold">
-                <Layers size={13} className="text-primary/70" />
-                <span>Preferred Layout</span>
-              </div>
-              <div className="font-bold text-foreground truncate">
-                {insight.preferredUnit || <span className="text-muted-foreground/60">Not specified</span>}
-              </div>
-            </div>
+                {/* Timeline */}
+                <div className="border rounded-lg p-2.5 space-y-1 bg-muted/20">
+                  <div className="flex items-center space-x-1 text-muted-foreground font-semibold">
+                    <Calendar size={13} className="text-primary/70" />
+                    <span>Timeline</span>
+                  </div>
+                  <div className="font-bold text-foreground">
+                    {insight.timeline || <span className="text-muted-foreground/60">Immediate</span>}
+                  </div>
+                </div>
 
-            {/* Timeline */}
-            <div className="border rounded-lg p-2.5 space-y-1 bg-muted/20">
-              <div className="flex items-center space-x-1 text-muted-foreground font-semibold">
-                <Calendar size={13} className="text-primary/70" />
-                <span>Timeline</span>
+                {/* Financing */}
+                <div className="border rounded-lg p-2.5 space-y-1 bg-muted/20">
+                  <div className="flex items-center space-x-1 text-muted-foreground font-semibold">
+                    <TrendingUp size={13} className="text-primary/70" />
+                    <span>Financing Status</span>
+                  </div>
+                  <div className="font-bold text-foreground truncate">
+                    {insight.financingStatus || <span className="text-muted-foreground/60">Pre-approved</span>}
+                  </div>
+                </div>
               </div>
-              <div className="font-bold text-foreground">
-                {insight.timeline || <span className="text-muted-foreground/60">Immediate</span>}
-              </div>
-            </div>
 
-            {/* Financing */}
-            <div className="border rounded-lg p-2.5 space-y-1 bg-muted/20">
-              <div className="flex items-center space-x-1 text-muted-foreground font-semibold">
-                <TrendingUp size={13} className="text-primary/70" />
-                <span>Financing Status</span>
-              </div>
-              <div className="font-bold text-foreground truncate">
-                {insight.financingStatus || <span className="text-muted-foreground/60">Pre-approved</span>}
-              </div>
-            </div>
-          </div>
+              {/* Intent */}
+              {insight.intent && (
+                <div className="border rounded-lg p-3 space-y-1 bg-muted/20 text-[11px]">
+                  <div className="flex items-center space-x-1 text-muted-foreground font-semibold">
+                    <Compass size={13} className="text-primary/70" />
+                    <span>Extracted Buying Intent</span>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {insight.intent}
+                  </p>
+                </div>
+              )}
 
-          {/* Intent */}
-          {insight.intent && (
-            <div className="border rounded-lg p-3 space-y-1 bg-muted/20 text-[11px]">
-              <div className="flex items-center space-x-1 text-muted-foreground font-semibold">
-                <Compass size={13} className="text-primary/70" />
-                <span>Extracted Buying Intent</span>
-              </div>
-              <p className="text-muted-foreground leading-relaxed">
-                {insight.intent}
-              </p>
-            </div>
-          )}
-
-          {/* Explainable Reasoning */}
-          {insight.reasoning && (
-            <div className="border rounded-lg p-3 space-y-1 bg-primary/5 text-[11px] border-primary/10">
-              <div className="flex items-center space-x-1 text-primary font-bold">
-                <FileText size={13} />
-                <span>Explainable Reasoning</span>
-              </div>
-              <p className="text-muted-foreground leading-relaxed">
-                {insight.reasoning}
-              </p>
-            </div>
+              {/* Explainable Reasoning */}
+              {insight.reasoning && (
+                <div className="border rounded-lg p-3 space-y-1 bg-primary/5 text-[11px] border-primary/10">
+                  <div className="flex items-center space-x-1 text-primary font-bold">
+                    <FileText size={13} />
+                    <span>Explainable Reasoning</span>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {insight.reasoning}
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       ) : (

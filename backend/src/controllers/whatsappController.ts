@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/database';
 import { whatsappService } from '../services/whatsappService';
 import { aiService } from '../services/ai/aiService';
+import { notificationService } from '../services/notificationService';
 
 
 class WhatsAppControllerError extends Error {
@@ -135,9 +136,68 @@ export const handleWebhook = async (req: Request, res: Response, next: NextFunct
             },
           });
 
-          // 4. Trigger AI qualification asynchronously
-          // Don't await this inside the webhook reply block to prevent timeouts
-          qualifyLeadAutomatically(lead.id);
+          // 4. Human Handoff Check & Outbound triggers
+          const handoffKeywords = ['human', 'agent', 'help', 'support', 'person', 'talk to agent', 'representative'];
+          const wantsHandoff = handoffKeywords.some(keyword => content.toLowerCase().includes(keyword));
+
+          if (wantsHandoff && !lead.isHandedOver) {
+            await prisma.lead.update({
+              where: { id: lead.id },
+              data: { isHandedOver: true },
+            });
+            lead.isHandedOver = true;
+
+            await prisma.leadActivity.create({
+              data: {
+                leadId: lead.id,
+                type: 'NOTE',
+                description: 'Buyer requested human agent assistance. AI automated responses paused.',
+              },
+            });
+
+            // Notify assigned agent or organization admins
+            const notifyUserId = lead.assignedUserId;
+            if (notifyUserId) {
+              await notificationService.sendNotification(
+                notifyUserId,
+                'Human Handoff Request',
+                `Lead ${lead.firstName} ${lead.lastName} has requested a human agent on WhatsApp.`,
+                {
+                  subject: `PropX CRM - Handoff Request: ${lead.firstName} ${lead.lastName}`,
+                  text: `Hello, the lead ${lead.firstName} ${lead.lastName} has requested human assistance.`,
+                  html: `<p>Hello,</p><p>Lead <strong>${lead.firstName} ${lead.lastName}</strong> has requested to speak with a human agent on WhatsApp.</p><p>Please take over the conversation.</p>`,
+                }
+              );
+            } else {
+              // Notify organization administrators/managers
+              const managers = await prisma.user.findMany({
+                where: {
+                  organizationId: defaultOrg.id,
+                  status: 'ACTIVE',
+                  role: { in: ['ADMIN', 'SALES_MANAGER'] },
+                  deletedAt: null,
+                },
+                select: { id: true },
+              });
+              for (const manager of managers) {
+                await notificationService.sendNotification(
+                  manager.id,
+                  'Unassigned Handoff Request',
+                  `Unassigned Lead ${lead.firstName} ${lead.lastName} has requested a human agent on WhatsApp.`,
+                  {
+                    subject: `PropX CRM - Unassigned Handoff: ${lead.firstName} ${lead.lastName}`,
+                    text: `Hello, the lead ${lead.firstName} ${lead.lastName} requested human assistance.`,
+                    html: `<p>Hello,</p><p>An unassigned lead <strong>${lead.firstName} ${lead.lastName}</strong> has requested to speak with a human agent on WhatsApp.</p>`,
+                  }
+                );
+              }
+            }
+          }
+
+          // Trigger AI qualification only if not handed over
+          if (!lead.isHandedOver) {
+            qualifyLeadAutomatically(lead.id);
+          }
         }
       }
     }
@@ -175,6 +235,21 @@ export const sendMessage = async (
 
     if (!lead.phone) {
       throw new WhatsAppControllerError('Lead profile has no registered phone number to contact.', 400);
+    }
+
+    // Toggle human handoff takeover on outbound manual agent messages
+    if (!lead.isHandedOver) {
+      await prisma.lead.update({
+        where: { id: lead.id },
+        data: { isHandedOver: true },
+      });
+      await prisma.leadActivity.create({
+        data: {
+          leadId: lead.id,
+          type: 'NOTE',
+          description: `Sales Agent took over the chat manually. AI automated replies paused.`,
+        },
+      });
     }
 
     // 1. Dispatch through WhatsApp Business API

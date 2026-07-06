@@ -6,6 +6,8 @@ import { MockProvider } from './mockProvider';
 import prisma from '../../config/database';
 import { Prisma } from '@prisma/client';
 import logger from '../../utils/logger';
+import { crmSyncService } from '../crmSyncService';
+import { routeLeadToAgent } from '../../utils/leadRouter';
 
 class AIService {
   private provider: AIProvider;
@@ -118,13 +120,17 @@ class AIService {
       },
     });
 
-    // Also update lead fields in database if empty
-    await prisma.lead.update({
+    // Also update lead fields in database if empty. Auto-qualify lead if score is HOT or WARM.
+    const isHotOrWarm = analysis.leadScore === 'HOT' || analysis.leadScore === 'WARM';
+    const shouldQualify = isHotOrWarm && lead.status === 'NEW';
+
+    const updatedLead = await prisma.lead.update({
       where: { id: leadId },
       data: {
         budget: lead.budget ? undefined : budgetVal || undefined,
         timeline: lead.timeline ? undefined : analysis.timeline || undefined,
         financingStatus: lead.financingStatus ? undefined : analysis.financingStatus || undefined,
+        status: shouldQualify ? 'QUALIFIED' : undefined,
       },
     });
 
@@ -136,6 +142,25 @@ class AIService {
         description: `AI Analysis executed. Generated Lead Score: ${analysis.leadScore}. Reasoning: ${analysis.reasoning.slice(0, 100)}...`,
       },
     });
+
+    if (shouldQualify) {
+      await prisma.leadActivity.create({
+        data: {
+          leadId,
+          type: 'STATUS_CHANGE',
+          description: `Lead status automatically upgraded to QUALIFIED based on AI score: ${analysis.leadScore}`,
+        },
+      });
+
+      // Auto-route to agent
+      if (!updatedLead.assignedUserId) {
+        await routeLeadToAgent(leadId);
+      }
+
+      // CRM sync and webhook dispatch
+      await crmSyncService.syncLeadToHubSpot(leadId);
+      await crmSyncService.dispatchWebhook(leadId);
+    }
 
     return insight;
   }

@@ -10,6 +10,7 @@ import {
   deleteLead,
   logActivity,
   importCSV,
+  createPublicLead,
 } from '../controllers/leadController';
 
 const router = Router();
@@ -101,10 +102,32 @@ const uuidIdSchema = z.object({
   }),
 });
 
+const createPublicLeadSchema = z.object({
+  body: z.object({
+    firstName: z
+      .string({ required_error: 'First name is required' })
+      .min(1, 'First name cannot be empty'),
+    lastName: z
+      .string({ required_error: 'Last name is required' })
+      .min(1, 'Last name cannot be empty'),
+    email: z
+      .string()
+      .email('Invalid email address format')
+      .optional()
+      .nullable()
+      .or(z.literal('')),
+    phone: z.string().optional().nullable(),
+    projectId: z.string().uuid('Invalid project ID format'),
+    source: z.string().optional().nullable(),
+    notes: z.string().optional().nullable(),
+  }),
+});
+
 // ==========================================
 // ROUTES DEFINITIONS
 // ==========================================
 
+router.post('/public', validate(createPublicLeadSchema), createPublicLead);
 router.post('/', protect, validate(createLeadSchema), createLead);
 router.get('/', protect, getLeads);
 router.post('/import', protect, validate(importCSVSchema), importCSV);

@@ -11,7 +11,7 @@ import {
   Trash2,
   Phone,
   Mail,
-  DollarSign,
+  IndianRupee,
   Sparkles,
   X,
   AlertCircle,
@@ -429,9 +429,9 @@ export default function LeadDetail() {
                 <div className="flex justify-between items-center">
                   <span className="font-semibold uppercase tracking-wider text-[10px]">Budget</span>
                   <span className="font-extrabold text-foreground text-sm flex items-center">
-                    <DollarSign size={13} className="text-emerald-500" />
+                    <IndianRupee size={13} className="text-emerald-500" />
                     {lead.budget
-                      ? parseFloat(lead.budget).toLocaleString(undefined, {
+                      ? parseFloat(lead.budget).toLocaleString('en-IN', {
                           minimumFractionDigits: 0,
                         })
                       : 'Not disclosed'}

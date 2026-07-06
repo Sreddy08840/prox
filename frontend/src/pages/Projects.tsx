@@ -63,6 +63,18 @@ export default function Projects() {
 
   // Create Project Modal state
   const [isOpen, setIsOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
+
+  // Step 2 unit type form state
+  const [layoutName, setLayoutName] = useState('');
+  const [bedrooms, setBedrooms] = useState(2);
+  const [bathrooms, setBathrooms] = useState(2);
+  const [sizeSqFt, setSizeSqFt] = useState(1000);
+  const [basePrice, setBasePrice] = useState(4500000);
+  const [addingLayout, setAddingLayout] = useState(false);
+  const [layoutSuccess, setLayoutSuccess] = useState<string | null>(null);
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
@@ -144,7 +156,8 @@ export default function Projects() {
       });
 
       if (response.data.success) {
-        setIsOpen(false);
+        setCreatedProjectId(response.data.data.id);
+        setWizardStep(2);
         // Clear fields
         setName('');
         setDescription('');
@@ -162,6 +175,37 @@ export default function Projects() {
       }
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleAddLayout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createdProjectId) return;
+    setAddingLayout(true);
+    setCreateError(null);
+    setLayoutSuccess(null);
+    try {
+      const res = await api.post(`/projects/${createdProjectId}/unit-types`, {
+        name: layoutName,
+        bedrooms: Number(bedrooms),
+        bathrooms: Number(bathrooms),
+        sizeSqFt: Number(sizeSqFt),
+        basePrice: Number(basePrice),
+      });
+      if (res.data.success) {
+        setLayoutSuccess(`Successfully added layout layout configuration "${layoutName}"!`);
+        // Reset layout form
+        setLayoutName('');
+        setBedrooms(2);
+        setBathrooms(2);
+        setSizeSqFt(1000);
+        setBasePrice(4500000);
+        fetchProjects();
+      }
+    } catch (err) {
+      setCreateError('Failed to add unit layout configuration.');
+    } finally {
+      setAddingLayout(false);
     }
   };
 
@@ -192,7 +236,11 @@ export default function Projects() {
         </div>
         {isEditor && (
           <button
-            onClick={() => setIsOpen(true)}
+            onClick={() => {
+              setWizardStep(1);
+              setCreatedProjectId(null);
+              setIsOpen(true);
+            }}
             className="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/95 shadow-sm transition-colors"
           >
             <Plus size={16} />
@@ -391,7 +439,7 @@ export default function Projects() {
         </div>
       )}
 
-      {/* Create Modal Overlay */}
+      {/* Create Modal Overlay (Project Setup Wizard) */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg rounded-2xl border bg-card p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-150">
@@ -402,127 +450,333 @@ export default function Projects() {
               <X size={20} />
             </button>
 
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                <Sparkles size={22} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold">Create Property Project</h3>
-                <p className="text-xs text-muted-foreground">Add metadata fields to register a project.</p>
-              </div>
+            {/* Step Indicators */}
+            <div className="flex items-center justify-between mb-6 border-b pb-4">
+              <span className={`text-xs font-bold ${wizardStep === 1 ? 'text-primary' : 'text-muted-foreground'}`}>
+                1. Project Details
+              </span>
+              <span className="text-muted-foreground/45">➔</span>
+              <span className={`text-xs font-bold ${wizardStep === 2 ? 'text-primary' : 'text-muted-foreground'}`}>
+                2. Layout configurations
+              </span>
+              <span className="text-muted-foreground/45">➔</span>
+              <span className={`text-xs font-bold ${wizardStep === 3 ? 'text-primary' : 'text-muted-foreground'}`}>
+                3. Lead Ingestion Set
+              </span>
             </div>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-4">
-              {createError && (
-                <div className="rounded-lg bg-destructive/15 p-4 text-destructive flex items-start space-x-3 text-sm">
-                  <AlertCircle className="shrink-0 mt-0.5" size={18} />
-                  <span>{createError}</span>
+            {/* Step 1: Project details form */}
+            {wizardStep === 1 && (
+              <>
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                    <Sparkles size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">New Real Estate Project</h3>
+                    <p className="text-xs text-muted-foreground">Register your development details.</p>
+                  </div>
                 </div>
-              )}
 
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
-                  Project Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
-                  placeholder="E.g., Sunrise Towers"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm h-20 resize-none"
-                  placeholder="Describe properties, features, proximity structures..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
-                    Street Address
-                  </label>
-                  <input
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
-                    placeholder="102 Park Avenue"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
-                    placeholder="New York"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm font-medium"
-                  >
-                    <option value="PLANNING">Planning</option>
-                    <option value="UNDER_CONSTRUCTION">Under Construction</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="CANCELLED">Cancelled</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
-                    Launch Date
-                  </label>
-                  <input
-                    type="date"
-                    value={launchDate}
-                    onChange={(e) => setLaunchDate(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4 flex space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="w-1/2 py-2.5 bg-secondary text-secondary-foreground text-sm font-semibold rounded-lg hover:bg-secondary/90 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="w-1/2 flex justify-center items-center py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/95 transition-colors disabled:opacity-50"
-                >
-                  {creating ? (
-                    <Loader2 className="animate-spin" size={16} />
-                  ) : (
-                    'Create Project'
+                <form onSubmit={handleCreateSubmit} className="space-y-4">
+                  {createError && (
+                    <div className="rounded-lg bg-destructive/15 p-4 text-destructive flex items-start space-x-3 text-sm">
+                      <AlertCircle className="shrink-0 mt-0.5" size={18} />
+                      <span>{createError}</span>
+                    </div>
                   )}
-                </button>
-              </div>
-            </form>
+
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
+                      Project Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
+                      placeholder="E.g., Sunrise Towers"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm h-20 resize-none"
+                      placeholder="Describe properties, features, proximity structures..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
+                        Street Address
+                      </label>
+                      <input
+                        type="text"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
+                        placeholder="102 Park Avenue"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
+                        placeholder="New York"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
+                        Status
+                      </label>
+                      <select
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm font-medium"
+                      >
+                        <option value="PLANNING">Planning</option>
+                        <option value="UNDER_CONSTRUCTION">Under Construction</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="CANCELLED">Cancelled</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
+                        Launch Date
+                      </label>
+                      <input
+                        type="date"
+                        value={launchDate}
+                        onChange={(e) => setLaunchDate(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-4 flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      className="w-1/2 py-2.5 bg-secondary text-secondary-foreground text-sm font-semibold rounded-lg hover:bg-secondary/90 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="w-1/2 flex justify-center items-center py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/95 transition-colors disabled:opacity-50"
+                    >
+                      {creating ? (
+                        <Loader2 className="animate-spin" size={16} />
+                      ) : (
+                        'Save & Continue'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+
+            {/* Step 2: Add Inventory layouts */}
+            {wizardStep === 2 && (
+              <>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-2 rounded-xl bg-violet-500/10 text-violet-500">
+                    <Building2 size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">Configure Unit Layouts</h3>
+                    <p className="text-xs text-muted-foreground">Add unit types/BHK layouts to configure inventory pricing.</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleAddLayout} className="space-y-3.5">
+                  {createError && (
+                    <div className="rounded-lg bg-destructive/15 p-2.5 text-destructive text-xs">
+                      {createError}
+                    </div>
+                  )}
+
+                  {layoutSuccess && (
+                    <div className="rounded-lg bg-emerald-500/15 p-2.5 text-emerald-500 text-xs font-semibold">
+                      {layoutSuccess}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
+                      Layout Configuration Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={layoutName}
+                      onChange={(e) => setLayoutName(e.target.value)}
+                      className="w-full px-3 py-1.5 border rounded-lg bg-background text-foreground text-xs"
+                      placeholder="E.g., 2 BHK Apartment, Executive Penthouse"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
+                        Bedrooms
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        required
+                        value={bedrooms}
+                        onChange={(e) => setBedrooms(Number(e.target.value))}
+                        className="w-full px-3 py-1.5 border rounded-lg bg-background text-foreground text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
+                        Bathrooms
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        required
+                        value={bathrooms}
+                        onChange={(e) => setBathrooms(Number(e.target.value))}
+                        className="w-full px-3 py-1.5 border rounded-lg bg-background text-foreground text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
+                        Size (Size Sq Ft)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        required
+                        value={sizeSqFt}
+                        onChange={(e) => setSizeSqFt(Number(e.target.value))}
+                        className="w-full px-3 py-1.5 border rounded-lg bg-background text-foreground text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
+                      Base Price (₹ INR)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      required
+                      value={basePrice}
+                      onChange={(e) => setBasePrice(Number(e.target.value))}
+                      className="w-full px-3 py-1.5 border rounded-lg bg-background text-foreground font-semibold text-xs"
+                    />
+                  </div>
+
+                  <div className="flex space-x-2 pt-2 border-t mt-3">
+                    <button
+                      type="submit"
+                      disabled={addingLayout}
+                      className="w-1/2 flex justify-center items-center py-2 bg-secondary text-secondary-foreground text-xs font-semibold rounded-lg hover:bg-secondary/90 transition-colors"
+                    >
+                      {addingLayout ? 'Adding...' : '+ Add Layout'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWizardStep(3)}
+                      className="w-1/2 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-lg hover:bg-primary/95 transition-colors"
+                    >
+                      Next: Ingestion Code
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+
+            {/* Step 3: Web embedding contact forms and API keys */}
+            {wizardStep === 3 && (
+              <>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                    <Sparkles size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">Integration Embed Code</h3>
+                    <p className="text-xs text-muted-foreground">Embed public contact lead form or WhatsApp API channel.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                      Web Contact Form Ingestion Embed HTML (Public API)
+                    </span>
+                    <textarea
+                      readOnly
+                      rows={4}
+                      value={`<!-- Copy and paste into your website landing page -->
+<form action="http://localhost:5000/api/v1/leads/public" method="POST" style="font-family:sans-serif; max-width:400px; padding:20px; border:1px solid #ccc; border-radius:8px;">
+  <input type="hidden" name="projectId" value="${createdProjectId || ''}" />
+  <input type="hidden" name="source" value="Web Landing Page" />
+  
+  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:12px;">First Name</label>
+  <input type="text" name="firstName" required style="width:100%; margin-bottom:12px; padding:8px; border-radius:4px; border:1px solid #ccc;" />
+  
+  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:12px;">Last Name</label>
+  <input type="text" name="lastName" required style="width:100%; margin-bottom:12px; padding:8px; border-radius:4px; border:1px solid #ccc;" />
+  
+  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:12px;">Email</label>
+  <input type="email" name="email" required style="width:100%; margin-bottom:12px; padding:8px; border-radius:4px; border:1px solid #ccc;" />
+  
+  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:12px;">Phone</label>
+  <input type="text" name="phone" placeholder="+91..." style="width:100%; margin-bottom:15px; padding:8px; border-radius:4px; border:1px solid #ccc;" />
+  
+  <button type="submit" style="width:100%; background:#6366f1; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Submit Enquiry</button>
+</form>`}
+                      className="w-full px-3 py-2 border rounded-lg bg-muted text-muted-foreground font-mono text-[10px] leading-relaxed resize-none focus:outline-none"
+                      onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Click inside the box to select all, copy, and paste it into your external real estate marketing page.
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border p-3.5 bg-accent/25 space-y-2">
+                    <span className="text-[10px] font-bold uppercase text-primary tracking-wider block">
+                      WhatsApp Ingestion Channel
+                    </span>
+                    <p className="text-[11px] text-muted-foreground leading-normal">
+                      Point WhatsApp Business API Webhook integration triggers to: <code className="bg-background px-1 py-0.5 rounded text-foreground font-semibold">http://localhost:5000/api/v1/whatsapp/webhook</code> with verification token <code className="bg-background px-1 py-0.5 rounded text-foreground font-semibold">propx_token</code>.
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      className="w-full py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/95 transition-all shadow-sm"
+                    >
+                      Finish & Activate Project
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

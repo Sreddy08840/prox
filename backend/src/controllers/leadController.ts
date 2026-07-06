@@ -1,8 +1,11 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/database';
 import { AuthenticatedRequest } from '../middlewares/auth';
 import { LeadStatus, ActivityType, Prisma } from '@prisma/client';
 import notificationService from '../services/notificationService';
+import { routeLeadToAgent } from '../utils/leadRouter';
+import { crmSyncService } from '../services/crmSyncService';
+import logger from '../utils/logger';
 
 class CRMError extends Error {
   statusCode: number;
@@ -16,35 +19,101 @@ class CRMError extends Error {
 /**
  * Helper to check duplicate leads in organization
  */
-async function checkDuplicate(
+async function getExistingDuplicate(
   orgId: string,
   email?: string | null,
   phone?: string | null,
-): Promise<string | null> {
+): Promise<any | null> {
   if (!email && !phone) return null;
 
   const conditions: Prisma.LeadWhereInput[] = [];
   if (email) conditions.push({ email });
   if (phone) conditions.push({ phone });
 
-  const existing = await prisma.lead.findFirst({
+  return await prisma.lead.findFirst({
     where: {
       organizationId: orgId,
       deletedAt: null,
       OR: conditions,
     },
   });
+}
 
-  if (existing) {
-    if (email && existing.email === email) {
-      return `A lead with email "${email}" already exists in the organization.`;
-    }
-    if (phone && existing.phone === phone) {
-      return `A lead with phone "${phone}" already exists in the organization.`;
-    }
+/**
+ * Helper to merge duplicate lead data
+ */
+async function mergeLead(
+  existingLeadId: string,
+  data: {
+    firstName?: string;
+    lastName?: string;
+    email?: string | null;
+    phone?: string | null;
+    status?: LeadStatus;
+    source?: string | null;
+    budget?: number | null;
+    timeline?: string | null;
+    financingStatus?: string | null;
+    notes?: string | null;
+    assignedUserId?: string | null;
+    preferredUnitId?: string | null;
+  },
+  tx?: any
+): Promise<any> {
+  const db = tx || prisma;
+
+  const currentLead = await db.lead.findUnique({
+    where: { id: existingLeadId }
+  });
+
+  if (!currentLead) return null;
+
+  let mergedNotes = currentLead.notes || '';
+  if (data.notes) {
+    mergedNotes += (mergedNotes ? '\n' : '') + `[Merged on ${new Date().toLocaleDateString()}] ${data.notes}`;
   }
 
-  return null;
+  const budgetVal = data.budget !== undefined && data.budget !== null ? new Prisma.Decimal(data.budget) : currentLead.budget;
+
+  const updatedLead = await db.lead.update({
+    where: { id: existingLeadId },
+    data: {
+      firstName: data.firstName || currentLead.firstName,
+      lastName: data.lastName || currentLead.lastName,
+      email: data.email || currentLead.email,
+      phone: data.phone || currentLead.phone,
+      status: data.status || currentLead.status,
+      source: data.source || currentLead.source || 'Merged',
+      budget: budgetVal,
+      timeline: data.timeline || currentLead.timeline,
+      financingStatus: data.financingStatus || currentLead.financingStatus,
+      notes: mergedNotes || null,
+      assignedUserId: data.assignedUserId || currentLead.assignedUserId,
+      preferredUnitId: data.preferredUnitId || currentLead.preferredUnitId,
+    },
+  });
+
+  // Log activity
+  await db.leadActivity.create({
+    data: {
+      leadId: existingLeadId,
+      type: 'NOTE',
+      description: `Duplicate lead detected. Details merged automatically. Source channel: ${data.source || 'Unknown'}.`,
+    },
+  });
+
+  // Trigger auto-routing if status becomes qualified
+  if (updatedLead.status === 'QUALIFIED' && !updatedLead.assignedUserId) {
+    await routeLeadToAgent(updatedLead.id);
+  }
+
+  // Trigger CRM push
+  if (updatedLead.status === 'QUALIFIED') {
+    await crmSyncService.syncLeadToHubSpot(updatedLead.id);
+    await crmSyncService.dispatchWebhook(updatedLead.id);
+  }
+
+  return updatedLead;
 }
 
 /**
@@ -77,9 +146,27 @@ export const createLead = async (
     } = req.body;
 
     // Check duplicate
-    const duplicateMessage = await checkDuplicate(orgId, email, phone);
-    if (duplicateMessage) {
-      throw new CRMError(duplicateMessage, 400);
+    const existingDuplicate = await getExistingDuplicate(orgId, email, phone);
+    if (existingDuplicate) {
+      const mergedLead = await mergeLead(existingDuplicate.id, {
+        firstName,
+        lastName,
+        email,
+        phone,
+        status,
+        source,
+        budget,
+        timeline,
+        financingStatus,
+        notes,
+        assignedUserId,
+        preferredUnitId,
+      });
+      res.status(200).json({
+        success: true,
+        data: mergedLead,
+      });
+      return;
     }
 
     // Create lead in transaction to log initial activity log
@@ -338,12 +425,16 @@ export const updateLead = async (
 
     // Check duplicate if email or phone is updated
     if (email && email !== lead.email) {
-      const duplicateMessage = await checkDuplicate(orgId, email, null);
-      if (duplicateMessage) throw new CRMError(duplicateMessage, 400);
+      const existing = await getExistingDuplicate(orgId, email, null);
+      if (existing && existing.id !== id) {
+        throw new CRMError(`A lead with email "${email}" already exists in the organization.`, 400);
+      }
     }
     if (phone && phone !== lead.phone) {
-      const duplicateMessage = await checkDuplicate(orgId, null, phone);
-      if (duplicateMessage) throw new CRMError(duplicateMessage, 400);
+      const existing = await getExistingDuplicate(orgId, null, phone);
+      if (existing && existing.id !== id) {
+        throw new CRMError(`A lead with phone "${phone}" already exists in the organization.`, 400);
+      }
     }
 
     // Update in transaction to append status changes logs
@@ -406,6 +497,17 @@ export const updateLead = async (
           html: `<p>Hello,</p><p>The status of lead <strong>${lead.firstName} ${lead.lastName}</strong> has been updated to <strong>${status}</strong>.</p>`,
         },
       );
+    }
+
+    // Trigger auto-routing if status becomes qualified and not assigned
+    if (updated.status === 'QUALIFIED' && !updated.assignedUserId) {
+      await routeLeadToAgent(updated.id);
+    }
+
+    // Trigger CRM push if status was changed to QUALIFIED
+    if (updated.status === 'QUALIFIED' && status && status !== lead.status) {
+      await crmSyncService.syncLeadToHubSpot(updated.id);
+      await crmSyncService.dispatchWebhook(updated.id);
     }
 
     res.status(200).json({
@@ -553,10 +655,22 @@ export const importCSV = async (
         const phone = rowData.phone || null;
 
         // Check duplicate
-        const duplicateMessage = await checkDuplicate(orgId, email, phone);
-        if (duplicateMessage) {
+        const existingDuplicate = await getExistingDuplicate(orgId, email, phone);
+        if (existingDuplicate) {
+          await mergeLead(existingDuplicate.id, {
+            firstName,
+            lastName,
+            email,
+            phone,
+            status: (rowData.status as LeadStatus) || undefined,
+            source: rowData.source || 'CSV Import',
+            budget: rowData.budget ? parseFloat(rowData.budget) : null,
+            timeline: rowData.timeline || null,
+            financingStatus: rowData.financingStatus || null,
+            notes: rowData.notes || 'Merged during CSV Import',
+          });
           duplicatesCount++;
-          logs.push(`Row ${i + 1} (${firstName} ${lastName}): Duplicate - ${duplicateMessage}`);
+          logs.push(`Row ${i + 1} (${firstName} ${lastName}): Duplicate - Details merged.`);
           continue;
         }
 
@@ -604,6 +718,87 @@ export const importCSV = async (
         errorsCount,
         logs,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Create a public lead (web contact form ingestion)
+ */
+export const createPublicLead = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { firstName, lastName, email, phone, projectId, source, notes } = req.body;
+
+    if (!firstName || !lastName || !projectId) {
+      throw new CRMError('First name, last name, and projectId are required.', 400);
+    }
+
+    // Find the project and its organization
+    const project = await prisma.project.findUnique({
+      where: { id: projectId, deletedAt: null },
+      select: { organizationId: true },
+    });
+
+    if (!project) {
+      throw new CRMError('Project not found.', 404);
+    }
+
+    const orgId = project.organizationId;
+
+    // Check duplicate
+    const existingDuplicate = await getExistingDuplicate(orgId, email, phone);
+    if (existingDuplicate) {
+      const mergedLead = await mergeLead(existingDuplicate.id, {
+        firstName,
+        lastName,
+        email,
+        phone,
+        source: source || 'Web Form',
+        notes: notes || 'Submitted via public contact form.',
+      });
+      res.status(200).json({
+        success: true,
+        data: mergedLead,
+      });
+      return;
+    }
+
+    // Create lead in transaction
+    const lead = await prisma.$transaction(async (tx) => {
+      const newLead = await tx.lead.create({
+        data: {
+          firstName,
+          lastName,
+          email: email || null,
+          phone: phone || null,
+          status: 'NEW',
+          source: source || 'Web Form',
+          notes: notes || 'Submitted via public contact form.',
+          organizationId: orgId,
+        },
+      });
+
+      // Log initial creation activity
+      await tx.leadActivity.create({
+        data: {
+          leadId: newLead.id,
+          type: 'STATUS_CHANGE',
+          description: `Lead ingested automatically via public web form.`,
+        },
+      });
+
+      return newLead;
+    });
+
+    res.status(201).json({
+      success: true,
+      data: lead,
     });
   } catch (error) {
     next(error);

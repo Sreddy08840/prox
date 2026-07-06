@@ -7,7 +7,7 @@ import {
   Plus,
   Search,
   Users,
-  DollarSign,
+  IndianRupee,
   Phone,
   Mail,
   Sparkles,
@@ -469,8 +469,8 @@ export default function Leads() {
                     <td className="px-6 py-4 text-right font-black text-foreground">
                       {lead.budget ? (
                         <span className="flex items-center justify-end">
-                          <DollarSign size={13} className="text-emerald-500 shrink-0" />
-                          {parseFloat(lead.budget).toLocaleString(undefined, {
+                          <IndianRupee size={13} className="text-emerald-500 shrink-0" />
+                          {parseFloat(lead.budget).toLocaleString('en-IN', {
                             minimumFractionDigits: 0,
                           })}
                         </span>

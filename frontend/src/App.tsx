@@ -173,9 +173,41 @@ const SettingsPage = ({ currentUser }: { currentUser: { id: string; role: string
   );
 };
 
+const translations = {
+  EN: {
+    dashboard: 'Dashboard',
+    projects: 'Projects',
+    leads: 'Leads',
+    tenants: 'Tenants',
+    settings: 'Settings',
+    adminPanel: 'Admin Panel',
+    crmStatus: 'CRM Status: Online',
+    logout: 'Logout',
+    lightMode: 'Light Mode',
+    darkMode: 'Dark Mode',
+    language: 'Language: EN',
+  },
+  ES: {
+    dashboard: 'Tablero',
+    projects: 'Proyectos',
+    leads: 'Clientes Potenciales',
+    tenants: 'Inquilinos',
+    settings: 'Configuración',
+    adminPanel: 'Panel de Admin',
+    crmStatus: 'Estado del CRM: En línea',
+    logout: 'Cerrar sesión',
+    lightMode: 'Modo Claro',
+    darkMode: 'Modo Oscuro',
+    language: 'Idioma: ES',
+  }
+};
+
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [lang, setLang] = useState<'EN' | 'ES'>('EN');
   const [currentUser] = useState({ id: 'mock-user-123', role: 'ADMIN' }); // Mock Admin user
+
+  const t = translations[lang];
 
   const token = localStorage.getItem('propx_auth_token');
   if (!token && window.location.pathname !== '/login' && !window.location.pathname.startsWith('/accept-invitation')) {
@@ -210,35 +242,35 @@ function App() {
                       className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       <LayoutDashboard size={18} />
-                      <span>Dashboard</span>
+                      <span>{t.dashboard}</span>
                     </Link>
                     <Link
                       to="/projects"
                       className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       <Building2 size={18} />
-                      <span>Projects</span>
+                      <span>{t.projects}</span>
                     </Link>
                     <Link
                       to="/leads"
                       className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       <Users size={18} />
-                      <span>Leads</span>
+                      <span>{t.leads}</span>
                     </Link>
                     <Link
                       to="/tenants"
                       className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       <Users size={18} />
-                      <span>Tenants</span>
+                      <span>{t.tenants}</span>
                     </Link>
                     <Link
                       to="/settings"
                       className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       <Settings size={18} />
-                      <span>Settings</span>
+                      <span>{t.settings}</span>
                     </Link>
                     {currentUser.role === 'ADMIN' && (
                       <Link
@@ -246,7 +278,7 @@ function App() {
                         className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                       >
                         <Sliders size={18} />
-                        <span>Admin Panel</span>
+                        <span>{t.adminPanel}</span>
                       </Link>
                     )}
                   </nav>
@@ -254,12 +286,18 @@ function App() {
 
                 <div className="p-6 border-t flex flex-col space-y-4">
                   <button
+                    onClick={() => setLang(lang === 'EN' ? 'ES' : 'EN')}
+                    className="flex items-center justify-between w-full px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all"
+                  >
+                    <span>{t.language}</span>
+                  </button>
+                  <button
                     onClick={toggleDarkMode}
                     className="flex items-center justify-between w-full px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all"
                   >
                     <span className="flex items-center space-x-2">
                       {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-                      <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                      <span>{isDarkMode ? t.lightMode : t.darkMode}</span>
                     </span>
                   </button>
                   <Link
@@ -267,7 +305,7 @@ function App() {
                     className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
                   >
                     <LogIn size={18} />
-                    <span>Logout</span>
+                    <span>{t.logout}</span>
                   </Link>
                 </div>
               </aside>
@@ -278,7 +316,7 @@ function App() {
                 <header className="h-16 border-b bg-card flex items-center justify-between px-6 md:px-10 shrink-0">
                   <div className="text-xs text-muted-foreground font-semibold flex items-center space-x-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>CRM Status: Online</span>
+                    <span>{t.crmStatus}</span>
                   </div>
                   <div className="flex items-center space-x-4">
                     <NotificationCenter />

@@ -12,7 +12,7 @@ import {
   Trash2,
   Edit2,
   Home,
-  DollarSign,
+  IndianRupee,
   Key,
 } from 'lucide-react';
 
@@ -387,12 +387,12 @@ export default function Tenants() {
             <div>
               <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Monthly Rent Portfolio</span>
               <h4 className="text-xl font-black text-foreground mt-1 flex items-center">
-                <DollarSign size={16} className="text-emerald-500 shrink-0" />
-                {activeRentSum.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                <IndianRupee size={16} className="text-emerald-500 shrink-0" />
+                {activeRentSum.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </h4>
             </div>
             <div className="p-2 bg-emerald-500/10 text-emerald-600 rounded-lg">
-              <DollarSign size={16} />
+              <IndianRupee size={16} />
             </div>
           </div>
         </div>
@@ -524,8 +524,8 @@ export default function Tenants() {
                           <div>
                             <span className="text-[10px] uppercase text-muted-foreground/60 tracking-wider block">Monthly Rent</span>
                             <span className="font-black text-foreground flex items-center">
-                              <DollarSign size={13} className="text-emerald-500" />
-                              {parseFloat(activeLease.rentAmount).toLocaleString()}
+                              <IndianRupee size={13} className="text-emerald-500" />
+                              {parseFloat(activeLease.rentAmount).toLocaleString('en-IN')}
                             </span>
                           </div>
                           <div>

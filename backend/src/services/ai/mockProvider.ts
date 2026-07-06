@@ -7,8 +7,8 @@ export class MockProvider implements AIProvider {
 
     // 1. Budget extraction
     let budget: number | null = null;
-    const normalized = lower.replace(/(\d+),(\d+)/g, '$1$2');
-    const budgetMatch = normalized.match(/(?:budget|price|around|about|limit)\D*(\d{5,7})/);
+    const normalized = lower.replace(/,/g, '');
+    const budgetMatch = normalized.match(/(?:budget|price|around|about|limit)\D*(\d{5,9})/);
     if (budgetMatch && budgetMatch[1]) {
       budget = parseInt(budgetMatch[1]);
     }

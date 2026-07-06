@@ -8,7 +8,7 @@ import {
   Bed,
   Bath,
   Maximize2,
-  DollarSign,
+  IndianRupee,
   AlertCircle,
   X,
   Sparkles,
@@ -21,6 +21,10 @@ interface UnitType {
   bathrooms: number | null;
   sizeSqFt: number | null;
   basePrice: string | null;
+  totalUnits?: number;
+  availableUnits?: number;
+  demandHeat?: number;
+  pricingSignal?: 'OPPORTUNITY' | 'RISK' | 'NORMAL';
 }
 
 interface UnitTypesPanelProps {
@@ -171,11 +175,30 @@ export default function UnitTypesPanel({ projectId }: UnitTypesPanelProps) {
             >
               <div className="space-y-4">
                 <div className="flex justify-between items-start">
-                  <h4 className="font-bold text-base text-foreground group-hover:text-primary transition-colors">
-                    {type.name}
-                  </h4>
+                  <div>
+                    <h4 className="font-bold text-base text-foreground group-hover:text-primary transition-colors">
+                      {type.name}
+                    </h4>
+                    {type.pricingSignal === 'OPPORTUNITY' && (
+                      <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 uppercase tracking-wider">
+                        ★ Pricing Opportunity
+                      </span>
+                    )}
+                    {type.pricingSignal === 'RISK' && (
+                      <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500/10 border border-rose-500/20 text-rose-600 uppercase tracking-wider">
+                        ⚠ At Risk (High Vacancy)
+                      </span>
+                    )}
+                  </div>
                   <Layout className="text-muted-foreground/40" size={16} />
                 </div>
+
+                {type.totalUnits !== undefined && (
+                  <div className="flex justify-between text-[10px] text-muted-foreground border-b pb-3.5">
+                    <span>Inventory: <strong className="text-foreground">{type.availableUnits} / {type.totalUnits}</strong> available</span>
+                    <span>Demand Heat: <strong className="text-primary font-bold">{type.demandHeat} leads</strong></span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-3 gap-2 border-t border-b py-3 text-center text-xs text-muted-foreground">
                   <div>
@@ -212,9 +235,9 @@ export default function UnitTypesPanel({ projectId }: UnitTypesPanelProps) {
                     Base Pricing
                   </span>
                   <span className="font-extrabold text-foreground text-sm flex items-center">
-                    <DollarSign size={14} className="text-emerald-500 shrink-0" />
+                    <IndianRupee size={14} className="text-emerald-500 shrink-0" />
                     {type.basePrice
-                      ? parseFloat(type.basePrice).toLocaleString(undefined, {
+                      ? parseFloat(type.basePrice).toLocaleString('en-IN', {
                           minimumFractionDigits: 0,
                           maximumFractionDigits: 0,
                         })

@@ -210,6 +210,7 @@ model Lead {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   deletedAt       DateTime?      // Soft delete support
+  isHandedOver    Boolean        @default(false)
 
   // Relations
   organization    Organization   @relation(fields: [organizationId], references: [id])

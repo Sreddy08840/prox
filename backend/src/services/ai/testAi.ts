@@ -44,7 +44,7 @@ async function runTest() {
       {
         conversationId: conversation.id,
         senderType: 'LEAD',
-        content: 'Hello, I am looking for a 3 BHK Penthouse. My budget is around $450,000.',
+        content: 'Hello, I am looking for a 3 BHK Penthouse. My budget is around ₹4,500,000.',
       },
       {
         conversationId: conversation.id,

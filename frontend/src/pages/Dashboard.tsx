@@ -72,6 +72,7 @@ interface RecentActivity {
 
 interface DashboardData {
   kpis: KPIStats;
+  alerts?: { warning: boolean; message: string | null };
   leadTrend: TrendData[];
   leadFunnel: FunnelData[];
   leadSources: SourceData[];
@@ -84,6 +85,27 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Weekly Export Report States
+  const [exporting, setExporting] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const handleExportReport = async () => {
+    setExporting(true);
+    setExportSuccess(null);
+    setExportError(null);
+    try {
+      const res = await api.post('/dashboard/export-report');
+      if (res.data.success) {
+        setExportSuccess(res.data.message);
+      }
+    } catch (err) {
+      setExportError('Failed to trigger weekly summary report export.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -125,7 +147,7 @@ export default function Dashboard() {
     );
   }
 
-  const { kpis, leadTrend, leadFunnel, leadSources, demandHeatmap, recentActivities } = data;
+  const { kpis, leadTrend, leadFunnel, leadSources, demandHeatmap, recentActivities, alerts } = data;
 
   // Chart Color Palettes
   const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#f43f5e', '#6366f1'];
@@ -150,6 +172,31 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
+      {/* SLA Alert banner */}
+      {alerts?.warning && (
+        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-rose-700 flex items-start space-x-3 text-sm animate-pulse">
+          <AlertCircle className="shrink-0 mt-0.5 text-rose-500" size={18} />
+          <div>
+            <strong className="block text-xs uppercase tracking-wider text-rose-800 font-extrabold mb-0.5">SLA warning Alert</strong>
+            <span className="font-semibold text-xs">{alerts.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Export Success/Error Banner */}
+      {exportSuccess && (
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-700 flex items-start space-x-3 text-sm">
+          <Sparkles className="shrink-0 mt-0.5 text-emerald-500" size={18} />
+          <span className="font-semibold text-xs">{exportSuccess}</span>
+        </div>
+      )}
+      {exportError && (
+        <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-destructive flex items-start space-x-3 text-sm">
+          <AlertCircle className="shrink-0 mt-0.5 text-destructive animate-bounce" size={18} />
+          <span className="font-semibold text-xs">{exportError}</span>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-5">
         <div>
@@ -161,13 +208,23 @@ export default function Dashboard() {
             Real-time analytics, conversation insights, and lead pipeline intelligence.
           </p>
         </div>
-        <button
-          onClick={() => navigate('/leads')}
-          className="flex items-center space-x-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:bg-primary/95 transition-all shadow-sm shrink-0"
-        >
-          <span>Manage Pipeline</span>
-          <ChevronRight size={14} />
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            disabled={exporting}
+            onClick={handleExportReport}
+            className="flex items-center space-x-1.5 rounded-lg border border-input bg-card px-4 py-2.5 text-xs font-bold hover:bg-accent text-muted-foreground hover:text-foreground transition-all shrink-0"
+          >
+            {exporting ? <Loader2 className="animate-spin" size={14} /> : <FileText size={14} />}
+            <span>Export Weekly Summary</span>
+          </button>
+          <button
+            onClick={() => navigate('/leads')}
+            className="flex items-center space-x-1.5 rounded-lg bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/95 transition-all shadow-sm shrink-0"
+          >
+            <span>Manage Pipeline</span>
+            <ChevronRight size={14} />
+          </button>
+        </div>
       </div>
 
       {/* KPI Stats Grid Cards */}

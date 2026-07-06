@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import prisma from '../config/database';
 import { AuthenticatedRequest } from '../middlewares/auth';
 import cacheService from '../services/cacheService';
+import { sendEmail } from '../services/mailService';
 
 class DashboardError extends Error {
   statusCode: number;
@@ -162,23 +163,23 @@ export const getDashboardStats = async (
       });
 
       const budgetBrackets = [
-        { name: '< $100k', count: 0 },
-        { name: '$100k - $250k', count: 0 },
-        { name: '$250k - $500k', count: 0 },
-        { name: '$500k - $1M', count: 0 },
-        { name: '$1M+', count: 0 },
+        { name: '< ₹5L', count: 0 },
+        { name: '₹5L - ₹10L', count: 0 },
+        { name: '₹10L - ₹25L', count: 0 },
+        { name: '₹25L - ₹50L', count: 0 },
+        { name: '₹50L+', count: 0 },
       ];
 
       leads.forEach((l) => {
         if (l.budget) {
           const val = parseFloat(l.budget.toString());
-          if (val < 100000) {
+          if (val < 500000) {
             budgetBrackets[0].count++;
-          } else if (val >= 100000 && val < 250000) {
-            budgetBrackets[1].count++;
-          } else if (val >= 250000 && val < 500000) {
-            budgetBrackets[2].count++;
           } else if (val >= 500000 && val < 1000000) {
+            budgetBrackets[1].count++;
+          } else if (val >= 1000000 && val < 2500000) {
+            budgetBrackets[2].count++;
+          } else if (val >= 2500000 && val < 5000000) {
             budgetBrackets[3].count++;
           } else {
             budgetBrackets[4].count++;
@@ -207,6 +208,16 @@ export const getDashboardStats = async (
         },
       });
 
+      // SLA alerts checking
+      const alerts = {
+        warning: averageResponseTimeMin > 30 || (totalLeads > 0 && conversionRate < 10),
+        message: averageResponseTimeMin > 30 
+          ? `SLA Breach: Average response time is ${averageResponseTimeMin} min (threshold: 30 min)` 
+          : (totalLeads > 0 && conversionRate < 10) 
+            ? `Performance Alert: Lead-to-WON conversion rate has dropped to ${conversionRate}% (threshold: 10%)`
+            : null
+      };
+
       return {
         kpis: {
           totalLeads,
@@ -215,6 +226,7 @@ export const getDashboardStats = async (
           conversionRate,
           responseTimeMin: averageResponseTimeMin,
         },
+        alerts,
         leadTrend,
         leadFunnel,
         leadSources,
@@ -233,6 +245,107 @@ export const getDashboardStats = async (
     res.status(200).json({
       success: true,
       data: statsData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const exportSummaryReport = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const orgId = req.user?.organizationId;
+    const userEmail = req.user?.email;
+    if (!orgId || !userEmail) {
+      throw new DashboardError('User organization or email is missing', 400);
+    }
+
+    // Get current counts for report
+    const totalLeads = await prisma.lead.count({
+      where: { organizationId: orgId, deletedAt: null },
+    });
+
+    const qualifiedLeads = await prisma.lead.count({
+      where: { organizationId: orgId, status: 'QUALIFIED', deletedAt: null },
+    });
+
+    const hotLeads = await prisma.lead.count({
+      where: {
+        organizationId: orgId,
+        deletedAt: null,
+        aiInsight: {
+          leadScore: 'HOT',
+        },
+      },
+    });
+
+    const wonLeads = await prisma.lead.count({
+      where: { organizationId: orgId, status: 'WON', deletedAt: null },
+    });
+
+    const org = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { name: true },
+    });
+
+    const subject = `PropX Weekly Summary CRM Report - ${org?.name || 'My Org'}`;
+    const text = `
+PropX Weekly CRM Pipeline Report Summary:
+Organization: ${org?.name || 'N/A'}
+Report Recipient: ${userEmail}
+Generated At: ${new Date().toLocaleString()}
+
+Pipeline Metrics Summary:
+- Total Leads: ${totalLeads}
+- Qualified Leads: ${qualifiedLeads}
+- AI Scored HOT Leads: ${hotLeads}
+- Closed/WON Deals: ${wonLeads}
+
+Access your CRM Dashboard at http://localhost:5173 to review transcripts and assign agents.
+    `.trim();
+
+    const html = `
+<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px;">
+  <h2 style="color: #6366f1; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-top: 0;">PropX CRM Summary Report</h2>
+  <p>Hello,</p>
+  <p>Here is your generated weekly summary CRM metrics report for <strong>${org?.name || 'your organization'}</strong>:</p>
+  
+  <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+    <tr style="background-color: #f8fafc;">
+      <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: bold;">Total Leads Ingested</td>
+      <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: right; font-weight: bold; color: #1e293b;">${totalLeads}</td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; border: 1px solid #e2e8f0;">Qualified Leads</td>
+      <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: right; color: #8b5cf6; font-weight: bold;">${qualifiedLeads}</td>
+    </tr>
+    <tr style="background-color: #f8fafc;">
+      <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: bold; color: #ef4444;">AI-Scored HOT Leads</td>
+      <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: right; color: #ef4444; font-weight: bold;">${hotLeads}</td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: bold; color: #10b981;">WON Deals</td>
+      <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: right; color: #10b981; font-weight: bold;">${wonLeads}</td>
+    </tr>
+  </table>
+  
+  <p>You can download the full details or export to a CSV from the administrator portal at <a href="http://localhost:5173/">http://localhost:5173/</a>.</p>
+</div>
+    `.trim();
+
+    await sendEmail({
+      to: userEmail,
+      subject,
+      text,
+      html,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Weekly summary report successfully exported and emailed to ${userEmail}.`,
     });
   } catch (error) {
     next(error);
