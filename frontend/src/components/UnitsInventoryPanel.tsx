@@ -29,6 +29,8 @@ interface Unit {
   unitType: {
     name: string;
   };
+  xCoord?: number | null;
+  yCoord?: number | null;
 }
 
 interface UnitType {
@@ -78,6 +80,11 @@ export default function UnitsInventoryPanel({ projectId }: UnitsInventoryPanelPr
     totalPages: 1,
   });
 
+  // Layout View Mode & Visual Floor Plan Map state
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [projectInfo, setProjectInfo] = useState<any | null>(null);
+  const [selectedMappingUnitId, setSelectedMappingUnitId] = useState<string>('');
+
   // Modals state
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -124,6 +131,31 @@ export default function UnitsInventoryPanel({ projectId }: UnitsInventoryPanelPr
       // Keep fallback values
     }
   }, [projectId]);
+
+  const fetchProjectDetails = useCallback(async () => {
+    try {
+      const response = await api.get(`/projects/${projectId}`);
+      if (response.data.success) {
+        setProjectInfo(response.data.data);
+      }
+    } catch (_err) {
+      // Ignore
+    }
+  }, [projectId]);
+
+  const handleMapUnitCoordinates = async (unitId: string, x: number, y: number) => {
+    try {
+      const response = await api.put(`/units/${unitId}`, {
+        xCoord: x,
+        yCoord: y
+      });
+      if (response.data.success) {
+        fetchUnits();
+      }
+    } catch (_err) {
+      setError('Failed to update unit coordinates map pin.');
+    }
+  };
 
   const fetchUnitTypes = useCallback(async () => {
     try {
@@ -172,7 +204,8 @@ export default function UnitsInventoryPanel({ projectId }: UnitsInventoryPanelPr
     fetchUnits();
     fetchStats();
     fetchUnitTypes();
-  }, [fetchUnits, fetchStats, fetchUnitTypes]);
+    fetchProjectDetails();
+  }, [fetchUnits, fetchStats, fetchUnitTypes, fetchProjectDetails]);
 
   useEffect(() => {
     refreshDashboard();
@@ -425,8 +458,34 @@ export default function UnitsInventoryPanel({ projectId }: UnitsInventoryPanelPr
         </div>
       )}
 
+      {/* View Mode Tab Switcher */}
+      <div className="flex space-x-2 border-b pb-2">
+        <button
+          onClick={() => setViewMode('list')}
+          className={`px-4 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+            viewMode === 'list'
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-card text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          List Grid View
+        </button>
+        <button
+          onClick={() => setViewMode('map')}
+          className={`px-4 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+            viewMode === 'map'
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-card text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Interactive Floor Plan Map
+        </button>
+      </div>
+
       {/* 2. Search, Filter, Add Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+      {viewMode === 'list' && (
+        <>
+          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
         {/* Search & Filters */}
         <div className="flex flex-wrap flex-1 gap-3 items-center">
           {/* Search bar */}
@@ -648,6 +707,147 @@ export default function UnitsInventoryPanel({ projectId }: UnitsInventoryPanelPr
               </div>
             </div>
           )}
+        </div>
+      )}
+    </>
+  )}
+
+      {/* 4. Floor plan mapper mode */}
+      {viewMode === 'map' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-300">
+          {/* Mappable units list sidebar */}
+          <div className="lg:col-span-4 rounded-xl border bg-card p-5 space-y-4 shadow-sm">
+            <div>
+              <h4 className="font-bold text-sm text-foreground flex items-center">
+                <Sparkles className="text-primary mr-1.5" size={16} />
+                <span>Unit Mapper Panel</span>
+              </h4>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Select a physical unit, then click on the floor plan map grid to pin its location.
+              </p>
+            </div>
+
+            <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+              {units.map((unit) => {
+                const isMapped = unit.xCoord !== null && unit.yCoord !== null;
+                const isSelected = selectedMappingUnitId === unit.id;
+
+                return (
+                  <div
+                    key={unit.id}
+                    onClick={() => setSelectedMappingUnitId(unit.id)}
+                    className={`p-3 rounded-lg border text-xs cursor-pointer flex justify-between items-center transition-all ${
+                      isSelected
+                        ? 'border-primary bg-primary/5 font-bold shadow-sm'
+                        : 'bg-background hover:bg-muted/30 border-border'
+                    }`}
+                  >
+                    <div>
+                      <strong className="text-foreground">{unit.unitNumber}</strong>
+                      <span className="block text-[10px] text-muted-foreground mt-0.5">{unit.unitType?.name}</span>
+                    </div>
+
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${
+                      isMapped
+                        ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                        : 'bg-muted text-muted-foreground border'
+                    }`}>
+                      {isMapped ? 'Pinned' : 'Unmapped'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Interactive floor plan map */}
+          <div className="lg:col-span-8 rounded-xl border bg-card p-5 shadow-sm space-y-4 flex flex-col items-center">
+            <div className="w-full flex justify-between items-center">
+              <span className="text-[10px] font-extrabold uppercase text-muted-foreground tracking-wider">
+                Interactive Floor Map Layout
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                Click map grid to drop selected pin
+              </span>
+            </div>
+
+            {/* Layout Canvas relative container */}
+            <div 
+              onClick={(e) => {
+                if (!selectedMappingUnitId) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                handleMapUnitCoordinates(selectedMappingUnitId, x, y);
+              }}
+              className="relative w-full aspect-[4/3] max-w-[560px] rounded-xl border overflow-hidden shadow-inner cursor-crosshair group bg-slate-900 flex items-center justify-center"
+            >
+              {projectInfo?.floorPlanUrl ? (
+                <img 
+                  src={projectInfo.floorPlanUrl} 
+                  alt="Project Floor Plan"
+                  className="w-full h-full object-cover select-none pointer-events-none opacity-85"
+                />
+              ) : (
+                /* Premium Grid Mockup SVG placeholder */
+                <svg className="w-full h-full text-slate-800 opacity-30 select-none pointer-events-none" fill="none" viewBox="0 0 400 300">
+                  <defs>
+                    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeWidth="0.5" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid)" />
+                  <text x="50%" y="45%" textAnchor="middle" fill="currentColor" className="text-[14px] font-bold">Abstract Floor Layout Grid</text>
+                  <text x="50%" y="55%" textAnchor="middle" fill="currentColor" className="text-[9px]">Please upload floorPlanUrl in settings to view blueprint</text>
+                </svg>
+              )}
+
+              {/* Render Pins */}
+              {units.map((unit) => {
+                if (unit.xCoord === null || unit.yCoord === null) return null;
+                const isSelected = selectedMappingUnitId === unit.id;
+                
+                const getPinColor = (status: string) => {
+                  if (status === 'AVAILABLE') return 'bg-emerald-500 ring-emerald-500/20';
+                  if (status === 'SOLD') return 'bg-rose-500 ring-rose-500/20';
+                  return 'bg-blue-500 ring-blue-500/20'; // Reserved / rented
+                };
+
+                return (
+                  <div
+                    key={unit.id}
+                    onClick={(e) => {
+                      e.stopPropagation(); // prevent re-mapping coordinate click
+                      setSelectedMappingUnitId(unit.id);
+                    }}
+                    style={{ left: `${unit.xCoord}%`, top: `${unit.yCoord}%` }}
+                    className={`absolute -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-black text-white shadow-md border-2 border-white cursor-pointer select-none transition-transform hover:scale-125 ring-4 ${getPinColor(unit.status)} ${
+                      isSelected ? 'scale-125 border-primary animate-bounce' : ''
+                    }`}
+                    title={`Unit ${unit.unitNumber} (${unit.status})`}
+                  >
+                    {unit.unitNumber.slice(-3)}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Selected unit summary inside map page */}
+            {selectedMappingUnitId && (
+              <div className="w-full max-w-[560px] rounded-xl border bg-muted/30 p-3 flex justify-between items-center text-xs">
+                <div>
+                  <span>Selected Unit: <strong className="text-foreground">{units.find(u => u.id === selectedMappingUnitId)?.unitNumber}</strong></span>
+                  <span className="text-[10px] text-muted-foreground block mt-0.5">{units.find(u => u.id === selectedMappingUnitId)?.unitType.name}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground block">Mapped Status</span>
+                  <span className="font-bold text-primary">
+                    {units.find(u => u.id === selectedMappingUnitId)?.xCoord !== null ? 'Click grid to move pin' : 'Click grid to drop pin'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

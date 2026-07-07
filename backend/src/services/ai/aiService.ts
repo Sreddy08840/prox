@@ -160,9 +160,85 @@ class AIService {
       // CRM sync and webhook dispatch
       await crmSyncService.syncLeadToHubSpot(leadId);
       await crmSyncService.dispatchWebhook(leadId);
+
+      // Automated PDF brochure email delivery
+      if (updatedLead.email && analysis.preferredUnit) {
+        const matchLayout = await prisma.unitType.findFirst({
+          where: {
+            organizationId: updatedLead.organizationId,
+            name: { contains: analysis.preferredUnit.split(' ')[0], mode: 'insensitive' },
+            brochureUrl: { not: null },
+            deletedAt: null,
+          },
+          select: { name: true, brochureUrl: true },
+        });
+
+        if (matchLayout && matchLayout.brochureUrl) {
+          const { sendEmail } = require('../mailService');
+          try {
+            await sendEmail({
+              to: updatedLead.email,
+              subject: `PropX CRM - Brochure & Details for ${matchLayout.name}`,
+              text: `Hello ${updatedLead.firstName},\n\nWe have automatically qualified your interest in ${matchLayout.name}!\nHere is the link to download the project brochure:\n${matchLayout.brochureUrl}\n\nBest regards,\nPropX Team`,
+              html: `<p>Hello <strong>${updatedLead.firstName}</strong>,</p><p>We have automatically qualified your interest in <strong>${matchLayout.name}</strong>!</p><p>You can download the brochure with details and plans at the link below:</p><p><a href="${matchLayout.brochureUrl}" style="background:#6366f1;color:white;padding:10px 15px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block;">Download Brochure PDF</a></p><p>Best regards,<br/>PropX Team</p>`,
+            });
+
+            await prisma.leadActivity.create({
+              data: {
+                leadId,
+                type: 'EMAIL',
+                description: `Automatically emailed brochure for "${matchLayout.name}" to ${updatedLead.email}`,
+              },
+            });
+          } catch (_err) {
+            // Suppress mail failures to prevent interrupting transaction
+          }
+        }
+      }
     }
 
     return insight;
+  }
+
+  /**
+   * Generate an AI Negotiation Co-Pilot drafted message for objections
+   */
+  public async generateNegotiationDraft(leadId: string): Promise<string> {
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+      include: {
+        conversations: {
+          include: {
+            messages: {
+              orderBy: { createdAt: 'asc' },
+            },
+          },
+        },
+      },
+    });
+
+    if (!lead || lead.deletedAt) {
+      throw new Error('Lead profile not found.');
+    }
+
+    const conversation = lead.conversations[0];
+    if (!conversation || !conversation.messages || conversation.messages.length === 0) {
+      return `Hello ${lead.firstName}, I see you are interested in our project layouts. How can I help you proceed with site visits or financing details?`;
+    }
+
+    // Build chat transcript string
+    const transcriptText = conversation.messages
+      .map((m) => `${m.senderType === 'LEAD' ? 'Customer' : 'Agent'}: ${m.content}`)
+      .join('\n');
+
+    // Load prompt template
+    const promptPath = path.join(__dirname, '../../config/prompts/objectionHandlingPrompt.txt');
+    const promptTemplate = fs.readFileSync(promptPath, 'utf8');
+    const systemPrompt = promptTemplate.replace('{transcript}', transcriptText);
+
+    // Call provider
+    const response = await this.provider.generateDraft(transcriptText, systemPrompt);
+    return response.trim();
   }
 }
 

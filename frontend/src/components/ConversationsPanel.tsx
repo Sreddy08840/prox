@@ -77,6 +77,25 @@ export default function ConversationsPanel({ leadId }: ConversationsPanelProps) 
   // AI Summarize thread
   const [summarizing, setSummarizing] = useState(false);
 
+  // AI Negotiation Co-pilot Suggestion States
+  const [copilotLoading, setCopilotLoading] = useState(false);
+  const [copilotDraft, setCopilotDraft] = useState<string | null>(null);
+
+  const fetchCopilotDraft = async () => {
+    setCopilotLoading(true);
+    setCopilotDraft(null);
+    try {
+      const res = await api.post(`/ai/${leadId}/copilot-draft`);
+      if (res.data.success) {
+        setCopilotDraft(res.data.data.draft);
+      }
+    } catch (_err) {
+      setSendError('Failed to fetch negotiation draft from co-pilot.');
+    } finally {
+      setCopilotLoading(false);
+    }
+  };
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchConversations = useCallback(async () => {
@@ -436,6 +455,45 @@ export default function ConversationsPanel({ leadId }: ConversationsPanelProps) 
                 })
               )}
               <div ref={messagesEndRef} />
+            </div>
+
+            {/* AI Co-Pilot Suggestion Banner */}
+            <div className="mx-3 mt-1.5 rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2 shrink-0">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-1.5 text-primary font-bold text-[10px]">
+                  <Sparkles size={13} className="animate-pulse" />
+                  <span>AI Negotiation Co-Pilot</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchCopilotDraft}
+                  disabled={copilotLoading}
+                  className="flex items-center space-x-1 border border-primary/25 rounded px-2.5 py-0.5 text-[9px] font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-all cursor-pointer"
+                >
+                  {copilotLoading ? <Loader2 className="animate-spin" size={10} /> : <Sparkles size={10} />}
+                  <span>Generate Objection Response</span>
+                </button>
+              </div>
+
+              {copilotDraft && (
+                <div className="space-y-2">
+                  <p className="text-[11px] leading-relaxed text-muted-foreground bg-background p-2.5 rounded border italic">
+                    "{copilotDraft}"
+                  </p>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setContent(copilotDraft);
+                        setCopilotDraft(null);
+                      }}
+                      className="px-2 py-0.5 rounded bg-primary text-primary-foreground font-bold text-[9px] shadow-sm hover:bg-primary/95 transition-all cursor-pointer"
+                    >
+                      Use Suggestion in Chat
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Form footer input */}

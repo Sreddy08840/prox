@@ -26,7 +26,7 @@ export const createProject = async (
       throw new ProjectError('User is not associated with an organization', 400);
     }
 
-    const { name, description, address, city, status, launchDate } = req.body;
+    const { name, description, address, city, status, launchDate, floorPlanUrl } = req.body;
 
     const project = await prisma.project.create({
       data: {
@@ -36,6 +36,7 @@ export const createProject = async (
         city,
         status: status as ProjectStatus,
         launchDate: launchDate ? new Date(launchDate) : null,
+        floorPlanUrl: floorPlanUrl || null,
         organizationId: orgId,
       },
     });
@@ -190,7 +191,7 @@ export const updateProject = async (
     }
 
     const { id } = req.params;
-    const { name, description, address, city, status, launchDate } = req.body;
+    const { name, description, address, city, status, launchDate, floorPlanUrl } = req.body;
 
     const project = await prisma.project.findFirst({
       where: {
@@ -213,6 +214,7 @@ export const updateProject = async (
         city,
         status: status as ProjectStatus,
         launchDate: launchDate ? new Date(launchDate) : null,
+        floorPlanUrl: floorPlanUrl !== undefined ? floorPlanUrl : undefined,
       },
     });
 

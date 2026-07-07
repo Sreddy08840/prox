@@ -12,4 +12,5 @@ export interface AIAnalysisResult {
 export interface AIProvider {
   analyzeConversation(transcript: string, promptTemplate: string): Promise<AIAnalysisResult>;
   summarizeConversation(transcript: string, promptTemplate: string): Promise<string>;
+  generateDraft(transcript: string, promptTemplate: string): Promise<string>;
 }

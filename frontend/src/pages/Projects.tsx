@@ -87,6 +87,12 @@ export default function Projects() {
   // Current User (simulated check)
   const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
 
+  // Form Embed Customizer State
+  const [includeLayoutPref, setIncludeLayoutPref] = useState(true);
+  const [includeFinancingPref, setIncludeFinancingPref] = useState(true);
+  const [formBgColor, setFormBgColor] = useState('#1e293b');
+  const [formTextColor, setFormTextColor] = useState('#ffffff');
+
   useEffect(() => {
     // Read JWT role or set default mock
     const token = localStorage.getItem('propx_auth_token');
@@ -722,38 +728,163 @@ export default function Projects() {
                 </div>
 
                 <div className="space-y-4">
+                  {/* Form Customizer Panel */}
+                  <div className="rounded-xl border bg-card p-4 space-y-3">
+                    <span className="text-[10px] font-extrabold uppercase text-primary tracking-wider block">
+                      Enquiry Form Customizer
+                    </span>
+                    <div className="space-y-2">
+                      <label className="flex items-center text-xs space-x-2 text-muted-foreground cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={includeLayoutPref}
+                          onChange={(e) => setIncludeLayoutPref(e.target.checked)}
+                          className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <span>Include Layout Preference Dropdown</span>
+                      </label>
+                      <label className="flex items-center text-xs space-x-2 text-muted-foreground cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={includeFinancingPref}
+                          onChange={(e) => setIncludeFinancingPref(e.target.checked)}
+                          className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <span>Include Financing Status Dropdown</span>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-2.5 border-t">
+                      <div>
+                        <label className="block text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                          Background Color
+                        </label>
+                        <div className="flex items-center space-x-1.5">
+                          <input
+                            type="color"
+                            value={formBgColor}
+                            onChange={(e) => setFormBgColor(e.target.value)}
+                            className="w-7 h-7 rounded border cursor-pointer bg-transparent"
+                          />
+                          <span className="text-[10px] font-mono text-muted-foreground">{formBgColor}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                          Text Color
+                        </label>
+                        <div className="flex items-center space-x-1.5">
+                          <input
+                            type="color"
+                            value={formTextColor}
+                            onChange={(e) => setFormTextColor(e.target.value)}
+                            className="w-7 h-7 rounded border cursor-pointer bg-transparent"
+                          />
+                          <span className="text-[10px] font-mono text-muted-foreground">{formTextColor}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Generated Embed Code */}
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                       Web Contact Form Ingestion Embed HTML (Public API)
                     </span>
                     <textarea
                       readOnly
-                      rows={4}
+                      rows={5}
                       value={`<!-- Copy and paste into your website landing page -->
-<form action="http://localhost:5000/api/v1/leads/public" method="POST" style="font-family:sans-serif; max-width:400px; padding:20px; border:1px solid #ccc; border-radius:8px;">
+<form action="http://localhost:5000/api/v1/leads/public" method="POST" style="font-family:sans-serif; max-width:400px; padding:24px; background:${formBgColor}; color:${formTextColor}; border:1px solid rgba(0,0,0,0.1); border-radius:12px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
   <input type="hidden" name="projectId" value="${createdProjectId || ''}" />
   <input type="hidden" name="source" value="Web Landing Page" />
   
-  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:12px;">First Name</label>
-  <input type="text" name="firstName" required style="width:100%; margin-bottom:12px; padding:8px; border-radius:4px; border:1px solid #ccc;" />
+  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:11px; text-transform:uppercase; opacity:0.8;">First Name</label>
+  <input type="text" name="firstName" required style="width:100%; margin-bottom:12px; padding:9px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:#fff; color:#111827; font-size:13px;" />
   
-  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:12px;">Last Name</label>
-  <input type="text" name="lastName" required style="width:100%; margin-bottom:12px; padding:8px; border-radius:4px; border:1px solid #ccc;" />
+  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:11px; text-transform:uppercase; opacity:0.8;">Last Name</label>
+  <input type="text" name="lastName" required style="width:100%; margin-bottom:12px; padding:9px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:#fff; color:#111827; font-size:13px;" />
   
-  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:12px;">Email</label>
-  <input type="email" name="email" required style="width:100%; margin-bottom:12px; padding:8px; border-radius:4px; border:1px solid #ccc;" />
+  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:11px; text-transform:uppercase; opacity:0.8;">Email</label>
+  <input type="email" name="email" required style="width:100%; margin-bottom:12px; padding:9px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:#fff; color:#111827; font-size:13px;" />
   
-  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:12px;">Phone</label>
-  <input type="text" name="phone" placeholder="+91..." style="width:100%; margin-bottom:15px; padding:8px; border-radius:4px; border:1px solid #ccc;" />
+  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:11px; text-transform:uppercase; opacity:0.8;">Phone</label>
+  <input type="text" name="phone" placeholder="+91..." required style="width:100%; margin-bottom:15px; padding:9px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:#fff; color:#111827; font-size:13px;" />${includeLayoutPref ? `
   
-  <button type="submit" style="width:100%; background:#6366f1; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Submit Enquiry</button>
+  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:11px; text-transform:uppercase; opacity:0.8;">Preferred Layout</label>
+  <select name="preferredUnit" style="width:100%; margin-bottom:12px; padding:9px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:#fff; color:#111827; font-size:13px;">
+    <option value="2 BHK">2 BHK Apartment</option>
+    <option value="3 BHK">3 BHK Suite</option>
+    <option value="Penthouse">Penthouse Suite</option>
+  </select>` : ''}${includeFinancingPref ? `
+  
+  <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:11px; text-transform:uppercase; opacity:0.8;">Financing Status</label>
+  <select name="financingStatus" style="width:100%; margin-bottom:15px; padding:9px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:#fff; color:#111827; font-size:13px;">
+    <option value="Cash buyer">Cash Buyer</option>
+    <option value="Pre-approved loan">Pre-approved Loan</option>
+    <option value="Need home loan assistance">Need Home Loan Assistance</option>
+  </select>` : ''}
+  
+  <button type="submit" style="width:100%; background:#6366f1; color:white; border:none; padding:11px; border-radius:8px; font-weight:bold; font-size:13px; cursor:pointer;">Submit Enquiry</button>
 </form>`}
-                      className="w-full px-3 py-2 border rounded-lg bg-muted text-muted-foreground font-mono text-[10px] leading-relaxed resize-none focus:outline-none"
+                      className="w-full px-3 py-2 border rounded-lg bg-muted text-muted-foreground font-mono text-[9px] leading-relaxed resize-none focus:outline-none"
                       onClick={(e) => (e.target as HTMLTextAreaElement).select()}
                     />
                     <p className="text-[10px] text-muted-foreground mt-1">
                       Click inside the box to select all, copy, and paste it into your external real estate marketing page.
                     </p>
+                  </div>
+
+                  {/* Form Live Preview */}
+                  <div className="rounded-xl border bg-muted/30 p-4 space-y-3">
+                    <span className="text-[10px] font-extrabold uppercase text-muted-foreground tracking-wider block">
+                      Live In-Wizard Form Preview
+                    </span>
+                    <div
+                      style={{ backgroundColor: formBgColor, color: formTextColor }}
+                      className="rounded-lg p-5 border text-left transition-colors shadow-sm max-w-[320px] mx-auto text-xs"
+                    >
+                      <h4 className="font-bold text-xs mb-3 text-center tracking-tight">Project Inquiry Form</h4>
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-[8px] font-bold uppercase opacity-75 tracking-wider mb-0.5">First Name</label>
+                          <input disabled type="text" className="w-full border rounded px-2.5 py-1 text-[10px] bg-background text-foreground" placeholder="Rohan" />
+                        </div>
+                        <div>
+                          <label className="block text-[8px] font-bold uppercase opacity-75 tracking-wider mb-0.5">Last Name</label>
+                          <input disabled type="text" className="w-full border rounded px-2.5 py-1 text-[10px] bg-background text-foreground" placeholder="Sharma" />
+                        </div>
+                        <div>
+                          <label className="block text-[8px] font-bold uppercase opacity-75 tracking-wider mb-0.5">Email</label>
+                          <input disabled type="email" className="w-full border rounded px-2.5 py-1 text-[10px] bg-background text-foreground" placeholder="rohan@gmail.com" />
+                        </div>
+                        <div>
+                          <label className="block text-[8px] font-bold uppercase opacity-75 tracking-wider mb-0.5">Phone</label>
+                          <input disabled type="text" className="w-full border rounded px-2.5 py-1 text-[10px] bg-background text-foreground" placeholder="+91 98765 43210" />
+                        </div>
+                        {includeLayoutPref && (
+                          <div>
+                            <label className="block text-[8px] font-bold uppercase opacity-75 tracking-wider mb-0.5">Preferred Layout</label>
+                            <select disabled className="w-full border rounded px-2 py-1 text-[10px] bg-background text-foreground">
+                              <option>2 BHK Apartment</option>
+                              <option>3 BHK Suite</option>
+                            </select>
+                          </div>
+                        )}
+                        {includeFinancingPref && (
+                          <div>
+                            <label className="block text-[8px] font-bold uppercase opacity-75 tracking-wider mb-0.5">Financing Status</label>
+                            <select disabled className="w-full border rounded px-2 py-1 text-[10px] bg-background text-foreground">
+                              <option>Cash Buyer</option>
+                              <option>Need Home Loan</option>
+                            </select>
+                          </div>
+                        )}
+                        <button disabled className="w-full bg-[#6366f1] text-white font-semibold py-1.5 rounded-lg mt-2 text-[10px] opacity-75 cursor-not-allowed">
+                          Submit Enquiry
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="rounded-lg border p-3.5 bg-accent/25 space-y-2">

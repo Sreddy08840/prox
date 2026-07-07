@@ -4,6 +4,7 @@ import {
   verifyWebhook,
   handleWebhook,
   sendMessage,
+  simulateSandbox,
 } from '../controllers/whatsappController';
 
 const router = Router();
@@ -14,5 +15,8 @@ router.post('/webhook', handleWebhook);
 
 // Outbound Message sender API
 router.post('/send', protect, sendMessage);
+
+// WhatsApp sandbox simulation route
+router.post('/simulate-sandbox', simulateSandbox);
 
 export default router;

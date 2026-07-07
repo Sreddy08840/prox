@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { useState } from 'react';
-import { LayoutDashboard, Users, Settings, LogIn, Sparkles, Sun, Moon, Building2, AlertCircle, Sliders } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogIn, Sparkles, Sun, Moon, Building2, AlertCircle, Sliders, MessageSquare } from 'lucide-react';
 import AcceptInvitation from './pages/AcceptInvitation';
 import OrgProfilePanel from './components/OrgProfilePanel';
 import TeamManagementPanel from './components/TeamManagementPanel';
@@ -13,6 +13,7 @@ import AdminPanel from './pages/AdminPanel';
 import Tenants from './pages/Tenants';
 import api from './services/api';
 import NotificationCenter from './components/NotificationCenter';
+import SandboxSimulator from './pages/SandboxSimulator';
 
 // Login Preview Component
 
@@ -186,6 +187,7 @@ const translations = {
     lightMode: 'Light Mode',
     darkMode: 'Dark Mode',
     language: 'Language: EN',
+    sandbox: 'AI Sandbox',
   },
   ES: {
     dashboard: 'Tablero',
@@ -199,6 +201,7 @@ const translations = {
     lightMode: 'Modo Claro',
     darkMode: 'Modo Oscuro',
     language: 'Idioma: ES',
+    sandbox: 'Simulador IA',
   }
 };
 
@@ -272,6 +275,13 @@ function App() {
                       <Settings size={18} />
                       <span>{t.settings}</span>
                     </Link>
+                    <Link
+                      to="/sandbox"
+                      className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                    >
+                      <MessageSquare size={18} />
+                      <span>{t.sandbox}</span>
+                    </Link>
                     {currentUser.role === 'ADMIN' && (
                       <Link
                         to="/admin"
@@ -337,6 +347,7 @@ function App() {
                       element={<SettingsPage currentUser={currentUser} />}
                     />
                     <Route path="/admin" element={<AdminPanel />} />
+                    <Route path="/sandbox" element={<SandboxSimulator />} />
                   </Routes>
                 </main>
               </div>

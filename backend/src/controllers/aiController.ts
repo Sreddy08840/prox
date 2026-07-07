@@ -154,3 +154,41 @@ export const updateLeadInsight = async (
     next(error);
   }
 };
+
+/**
+ * Generate AI Negotiation Co-Pilot draft reply for agent takeover
+ */
+export const generateCopilotDraft = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const orgId = req.user?.organizationId;
+    if (!orgId) {
+      throw new AIInsightError('User is not associated with an organization', 400);
+    }
+
+    const { leadId } = req.params;
+
+    // Verify lead belongs to org
+    const lead = await prisma.lead.findFirst({
+      where: { id: leadId, organizationId: orgId, deletedAt: null },
+    });
+
+    if (!lead) {
+      throw new AIInsightError('Lead profile not found', 404);
+    }
+
+    const draft = await aiService.generateNegotiationDraft(leadId);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        draft,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

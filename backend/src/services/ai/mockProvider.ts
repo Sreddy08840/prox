@@ -98,4 +98,12 @@ export class MockProvider implements AIProvider {
 • Discussion centers around property inquiries, pricing plans, and layout requirements.
 • Next steps involve continuing follow-up actions and schedules.`;
   }
+
+  async generateDraft(transcript: string, _promptTemplate: string): Promise<string> {
+    const lines = transcript.split('\n').filter((l) => l.trim().length > 0);
+    const lastLine = lines[lines.length - 1] || '';
+    
+    return `Hello! We've received your query: "${lastLine.replace(/^(Customer|Agent):\s*/i, '')}". 
+I would be happy to share detail plans, pricing sheets, and coordinate a site visit to PropX Towers this Saturday. Let me know if that works for you!`;
+  }
 }

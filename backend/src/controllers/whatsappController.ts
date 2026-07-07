@@ -297,3 +297,137 @@ export const sendMessage = async (
     next(error);
   }
 };
+
+/**
+ * Simulate Sandbox WhatsApp message for testing AI qualification
+ */
+export const simulateSandbox = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { phone, content, contactName } = req.body;
+    if (!phone || !content) {
+      throw new WhatsAppControllerError('phone and content are required sandbox parameters.', 400);
+    }
+
+    const defaultOrg = await prisma.organization.findFirst();
+    if (!defaultOrg) {
+      throw new WhatsAppControllerError('No registered organization exists to connect sandbox lead.', 500);
+    }
+
+    // 1. Connect or auto-create Lead by phone number
+    let lead = await prisma.lead.findFirst({
+      where: {
+        organizationId: defaultOrg.id,
+        phone,
+        deletedAt: null,
+      },
+    });
+
+    if (!lead) {
+      const nameParts = (contactName || 'Sandbox Contact').trim().split(/\s+/);
+      const firstName = nameParts[0] || 'Sandbox';
+      const lastName = nameParts.slice(1).join(' ') || 'User';
+
+      lead = await prisma.lead.create({
+        data: {
+          firstName,
+          lastName,
+          phone,
+          source: 'WhatsApp Sandbox',
+          organizationId: defaultOrg.id,
+        },
+      });
+
+      // Log activity
+      await prisma.leadActivity.create({
+        data: {
+          leadId: lead.id,
+          type: 'STATUS_CHANGE',
+          description: 'Sandbox lead registered automatically.',
+        },
+      });
+    }
+
+    // 2. Find or create conversation
+    let conversation = await prisma.conversation.findFirst({
+      where: { leadId: lead.id },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!conversation) {
+      conversation = await prisma.conversation.create({
+        data: {
+          leadId: lead.id,
+          subject: `Sandbox Chat with ${lead.firstName} ${lead.lastName}`,
+        },
+      });
+    }
+
+    // 3. Store message
+    await prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        senderType: 'LEAD',
+        content,
+      },
+    });
+
+    // 4. Check for human handoff trigger
+    const handoffKeywords = ['human', 'agent', 'help', 'support', 'person', 'talk to agent', 'representative'];
+    const wantsHandoff = handoffKeywords.some(keyword => content.toLowerCase().includes(keyword));
+
+    if (wantsHandoff && !lead.isHandedOver) {
+      lead = await prisma.lead.update({
+        where: { id: lead.id },
+        data: { isHandedOver: true },
+      });
+      await prisma.leadActivity.create({
+        data: {
+          leadId: lead.id,
+          type: 'NOTE',
+          description: 'Buyer requested human agent assistance. Sandbox AI automated replies paused.',
+        },
+      });
+    }
+
+    // 5. Trigger AI qualification (await this in sandbox to return live results to screen!)
+    let insight = null;
+    let autoReplyMessage = null;
+    if (!lead.isHandedOver) {
+      insight = await aiService.qualifyLeadAndSave(lead.id);
+      
+      // Let's generate a simulated auto reply for the sandbox chat window!
+      autoReplyMessage = `Hello ${lead.firstName}, thank you for your query. We have logged your interest in our layout configurations. A sales agent will contact you shortly.`;
+      
+      // Save auto reply to messages
+      await prisma.message.create({
+        data: {
+          conversationId: conversation.id,
+          senderType: 'AI',
+          content: autoReplyMessage,
+        },
+      });
+    }
+
+    // Fetch conversation messages
+    const messages = await prisma.message.findMany({
+      where: { conversationId: conversation.id },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        lead,
+        insight,
+        autoReplyMessage,
+        messages,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -28,7 +28,7 @@ export const createUnitType = async (
     }
 
     const { projectId } = req.params;
-    const { name, bedrooms, bathrooms, sizeSqFt, basePrice } = req.body;
+    const { name, bedrooms, bathrooms, sizeSqFt, basePrice, brochureUrl } = req.body;
 
     // Check project exists
     const project = await prisma.project.findFirst({
@@ -45,6 +45,7 @@ export const createUnitType = async (
         bathrooms: bathrooms ? parseFloat(bathrooms) : null,
         sizeSqFt: sizeSqFt ? parseFloat(sizeSqFt) : null,
         basePrice: basePrice ? new Prisma.Decimal(basePrice) : null,
+        brochureUrl: brochureUrl || null,
         projectId,
         organizationId: orgId,
       },
@@ -155,7 +156,7 @@ export const updateUnitType = async (
     }
 
     const { id } = req.params;
-    const { name, bedrooms, bathrooms, sizeSqFt, basePrice } = req.body;
+    const { name, bedrooms, bathrooms, sizeSqFt, basePrice, brochureUrl } = req.body;
 
     const unitType = await prisma.unitType.findFirst({
       where: { id, organizationId: orgId, deletedAt: null },
@@ -172,6 +173,7 @@ export const updateUnitType = async (
         bathrooms: bathrooms ? parseFloat(bathrooms) : null,
         sizeSqFt: sizeSqFt ? parseFloat(sizeSqFt) : null,
         basePrice: basePrice ? new Prisma.Decimal(basePrice) : null,
+        brochureUrl: brochureUrl !== undefined ? brochureUrl : undefined,
       },
     });
 
@@ -424,7 +426,7 @@ export const updateUnit = async (
     }
 
     const { id } = req.params;
-    const { unitNumber, floor, status, price, areaSqFt, facing, unitTypeId } = req.body;
+    const { unitNumber, floor, status, price, areaSqFt, facing, unitTypeId, xCoord, yCoord } = req.body;
 
     const unit = await prisma.unit.findFirst({
       where: {
@@ -467,6 +469,8 @@ export const updateUnit = async (
         areaSqFt: areaSqFt ? parseFloat(areaSqFt) : null,
         facing,
         unitTypeId,
+        xCoord: xCoord !== undefined ? parseFloat(xCoord) : undefined,
+        yCoord: yCoord !== undefined ? parseFloat(yCoord) : undefined,
       },
     });
 
