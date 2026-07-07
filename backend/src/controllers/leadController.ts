@@ -1,11 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/database';
 import { AuthenticatedRequest } from '../middlewares/auth';
-import { LeadStatus, ActivityType, Prisma } from '@prisma/client';
+import { LeadStatus, ActivityType, Prisma, Lead } from '@prisma/client';
 import notificationService from '../services/notificationService';
 import { routeLeadToAgent } from '../utils/leadRouter';
 import { crmSyncService } from '../services/crmSyncService';
-import logger from '../utils/logger';
 
 class CRMError extends Error {
   statusCode: number;
@@ -23,7 +22,7 @@ async function getExistingDuplicate(
   orgId: string,
   email?: string | null,
   phone?: string | null,
-): Promise<any | null> {
+): Promise<Lead | null> {
   if (!email && !phone) return null;
 
   const conditions: Prisma.LeadWhereInput[] = [];
@@ -58,8 +57,8 @@ async function mergeLead(
     assignedUserId?: string | null;
     preferredUnitId?: string | null;
   },
-  tx?: any
-): Promise<any> {
+  tx?: Prisma.TransactionClient
+): Promise<Lead | null> {
   const db = tx || prisma;
 
   const currentLead = await db.lead.findUnique({

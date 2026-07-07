@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import logger from '../../utils/logger';
 import { crmSyncService } from '../crmSyncService';
 import { routeLeadToAgent } from '../../utils/leadRouter';
+import { sendEmail } from '../mailService';
 
 class AIService {
   private provider: AIProvider;
@@ -174,7 +175,6 @@ class AIService {
         });
 
         if (matchLayout && matchLayout.brochureUrl) {
-          const { sendEmail } = require('../mailService');
           try {
             await sendEmail({
               to: updatedLead.email,

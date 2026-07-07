@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import prisma from '../config/database';
 import { AuthenticatedRequest } from '../middlewares/auth';
 import { aiService } from '../services/ai/aiService';
+import { Prisma } from '@prisma/client';
 
 
 class AIInsightError extends Error {
@@ -113,8 +114,7 @@ export const updateLeadInsight = async (
       throw new AIInsightError('Lead profile not found', 404);
     }
 
-    const prismaClient = require('@prisma/client');
-    const budgetVal = budget !== undefined && budget !== null ? new prismaClient.Prisma.Decimal(budget) : undefined;
+    const budgetVal = budget !== undefined && budget !== null ? new Prisma.Decimal(budget) : undefined;
 
     const insight = await prisma.aiInsight.upsert({
       where: { leadId },
