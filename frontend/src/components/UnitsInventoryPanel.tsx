@@ -56,6 +56,10 @@ interface Pagination {
   totalPages: number;
 }
 
+interface ProjectInfo {
+  floorPlanUrl?: string | null;
+}
+
 interface UnitsInventoryPanelProps {
   projectId: string;
 }
@@ -82,7 +86,7 @@ export default function UnitsInventoryPanel({ projectId }: UnitsInventoryPanelPr
 
   // Layout View Mode & Visual Floor Plan Map state
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [projectInfo, setProjectInfo] = useState<any | null>(null);
+  const [projectInfo, setProjectInfo] = useState<ProjectInfo | null>(null);
   const [selectedMappingUnitId, setSelectedMappingUnitId] = useState<string>('');
 
   // Modals state
