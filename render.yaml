@@ -1,8 +1,3 @@
-databases:
-  - name: propx-postgres
-    databaseName: propx_db
-    plan: free
-
 services:
   - type: redis
     name: propx-redis
@@ -21,9 +16,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: propx-postgres
-          property: connectionString
+        sync: false
+      - key: DIRECT_URL
+        sync: false
       - key: REDIS_URL
         fromService:
           name: propx-redis
