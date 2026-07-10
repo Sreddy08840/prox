@@ -248,35 +248,35 @@ function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutPr
   return (
     <div className={`min-h-screen flex flex-col md:flex-row bg-background text-foreground transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
       {/* Floating Modern Sidebar */}
-      <aside className={`border-r bg-card flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out relative z-30 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
+      <aside className={`border-r border-[#1F2937]/50 bg-[#111827] text-[#CBD5E1] flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out relative z-30 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
         <div className="p-4 flex flex-col space-y-6">
           {/* Workspace Selector Mockup */}
           <div className="flex items-center justify-between">
             {!isSidebarCollapsed ? (
               <div 
                 onClick={() => setWorkspaceOpen(!workspaceOpen)}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl border bg-muted/20 hover:bg-muted/40 hover:border-muted-foreground/20 transition-all cursor-pointer select-none relative"
+                className="w-full flex items-center justify-between p-2.5 rounded-xl border border-[#1F2937] bg-[#1E293B]/40 hover:bg-[#1E293B]/70 transition-all cursor-pointer select-none relative"
               >
                 <div className="flex items-center space-x-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-primary to-violet-600 flex items-center justify-center font-extrabold text-xs text-white shadow-sm">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#6D5EF5] to-[#5B4FEA] flex items-center justify-center font-extrabold text-xs text-white shadow-sm">
                     P
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="text-xs font-bold tracking-tight text-foreground">PropX Enterprise</span>
-                    <span className="text-[10px] text-muted-foreground font-semibold">Workspace</span>
+                    <span className="text-xs font-bold tracking-tight text-white">PropX Enterprise</span>
+                    <span className="text-[10px] text-[#94A3B8] font-semibold">Workspace</span>
                   </div>
                 </div>
-                <ChevronDown size={14} className={`text-muted-foreground transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={14} className="text-[#94A3B8] transition-transform duration-200" />
                 {workspaceOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 border bg-popover text-popover-foreground rounded-xl shadow-lg p-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="px-2 py-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Workspaces</div>
-                    <div className="px-2 py-1.5 text-xs font-semibold rounded-lg bg-accent text-accent-foreground">PropX Enterprise</div>
-                    <div className="px-2 py-1.5 text-xs font-semibold rounded-lg hover:bg-accent/50 transition-colors">PropX Personal</div>
+                  <div className="absolute top-full left-0 right-0 mt-1 border border-[#1F2937] bg-[#111827] text-[#CBD5E1] rounded-xl shadow-lg p-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-2 py-1.5 text-[9px] font-bold text-[#94A3B8] uppercase tracking-wider">Workspaces</div>
+                    <div className="px-2 py-1.5 text-xs font-semibold rounded-lg bg-[#1E293B] text-white">PropX Enterprise</div>
+                    <div className="px-2 py-1.5 text-xs font-semibold rounded-lg hover:bg-[#1E293B]/50 transition-colors">PropX Personal</div>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-to-tr from-primary to-violet-600 flex items-center justify-center font-extrabold text-sm text-white shadow-sm">
+              <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-to-tr from-[#6D5EF5] to-[#5B4FEA] flex items-center justify-center font-extrabold text-sm text-white shadow-sm">
                 P
               </div>
             )}
@@ -293,11 +293,11 @@ function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutPr
                   to={item.to}
                   className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
                     active
-                      ? 'bg-primary text-white shadow-sm border border-primary/20 scale-[1.02]'
-                      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                      ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
+                      : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
                   }`}
                 >
-                  <Icon size={16} className={`shrink-0 ${active ? 'text-white' : 'text-muted-foreground group-hover:text-primary transition-colors'}`} />
+                  <Icon size={16} className={`shrink-0 ${active ? 'text-white' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
                   {!isSidebarCollapsed && <span className="tracking-tight">{item.label}</span>}
                   
                   {active && !isSidebarCollapsed && (
@@ -312,11 +312,11 @@ function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutPr
                 to="/admin"
                 className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
                   isActive('/admin')
-                    ? 'bg-primary text-white shadow-sm border border-primary/20 scale-[1.02]'
-                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                    ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
+                    : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
                 }`}
               >
-                <Sliders size={16} className={`shrink-0 ${isActive('/admin') ? 'text-white' : 'text-muted-foreground group-hover:text-primary transition-colors'}`} />
+                <Sliders size={16} className={`shrink-0 ${isActive('/admin') ? 'text-white' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
                 {!isSidebarCollapsed && <span className="tracking-tight">{t.adminPanel}</span>}
                 {isActive('/admin') && !isSidebarCollapsed && (
                   <span className="absolute right-3 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
@@ -327,11 +327,11 @@ function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutPr
         </div>
 
         {/* Sidebar Footer with Theme Toggle, Collapse, and Logout */}
-        <div className="p-4 border-t flex flex-col space-y-2">
+        <div className="p-4 border-t border-[#1F2937]/50 flex flex-col space-y-2">
           {/* Collapse sidebar button */}
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="flex items-center justify-between w-full px-3 py-2 rounded-xl border text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+            className="flex items-center justify-between w-full px-3 py-2 rounded-xl border border-[#1F2937]/80 text-xs font-bold text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white transition-all duration-200"
           >
             {!isSidebarCollapsed ? (
               <>
@@ -346,7 +346,7 @@ function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutPr
           {/* Theme Toggle */}
           <button
             onClick={toggleDarkMode}
-            className="flex items-center justify-between w-full px-3 py-2 rounded-xl border text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+            className="flex items-center justify-between w-full px-3 py-2 rounded-xl border border-[#1F2937]/80 text-xs font-bold text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white transition-all duration-200"
           >
             {!isSidebarCollapsed ? (
               <>
@@ -364,7 +364,7 @@ function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutPr
           <Link
             to="/login"
             onClick={() => localStorage.removeItem('propx_auth_token')}
-            className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold text-destructive hover:bg-destructive/10 transition-all duration-200"
+            className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 transition-all duration-200"
           >
             <LogIn size={16} className="shrink-0" />
             {!isSidebarCollapsed && <span className="tracking-tight">{t.logout}</span>}
@@ -375,7 +375,7 @@ function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutPr
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Global Premium Header Bar */}
-        <header className="h-16 border-b bg-card flex items-center justify-between px-6 md:px-10 shrink-0 relative z-20 shadow-sm">
+        <header className="h-16 sticky top-0 border-b bg-white/85 backdrop-blur-md flex items-center justify-between px-6 md:px-10 shrink-0 relative z-20 shadow-sm">
           
           {/* Global Search Bar Mockup */}
           <div className="hidden md:flex items-center space-x-2 relative w-72 lg:w-96">
