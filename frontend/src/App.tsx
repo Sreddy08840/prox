@@ -13,7 +13,6 @@ import AdminPanel from './pages/AdminPanel';
 import Tenants from './pages/Tenants';
 import api from './services/api';
 import NotificationCenter from './components/NotificationCenter';
-import SandboxSimulator from './pages/SandboxSimulator';
 
 // Login Preview Component
 
@@ -143,21 +142,19 @@ const SettingsPage = ({ currentUser }: { currentUser: { id: string; role: string
       <div className="border-b pb-1 flex space-x-6">
         <button
           onClick={() => setActiveTab('profile')}
-          className={`text-sm font-semibold pb-2.5 border-b-2 transition-all ${
-            activeTab === 'profile'
+          className={`text-sm font-semibold pb-2.5 border-b-2 transition-all ${activeTab === 'profile'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
+            }`}
         >
           Organization Profile
         </button>
         <button
           onClick={() => setActiveTab('team')}
-          className={`text-sm font-semibold pb-2.5 border-b-2 transition-all ${
-            activeTab === 'team'
+          className={`text-sm font-semibold pb-2.5 border-b-2 transition-all ${activeTab === 'team'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
+            }`}
         >
           Team Management
         </button>
@@ -275,13 +272,6 @@ function App() {
                       <Settings size={18} />
                       <span>{t.settings}</span>
                     </Link>
-                    <Link
-                      to="/sandbox"
-                      className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                    >
-                      <MessageSquare size={18} />
-                      <span>{t.sandbox}</span>
-                    </Link>
                     {currentUser.role === 'ADMIN' && (
                       <Link
                         to="/admin"
@@ -341,7 +331,6 @@ function App() {
                       element={<SettingsPage currentUser={currentUser} />}
                     />
                     <Route path="/admin" element={<AdminPanel />} />
-                    <Route path="/sandbox" element={<SandboxSimulator />} />
                   </Routes>
                 </main>
               </div>
