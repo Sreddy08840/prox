@@ -149,6 +149,47 @@ export default function Dashboard() {
 
   const { kpis, leadTrend, leadFunnel, recentActivities, alerts } = data;
 
+  // Dynamic Pipeline Health Score Calculations
+  const calculatePipelineHealth = () => {
+    const { totalLeads, qualifiedLeads, hotLeads, conversionRate } = kpis;
+    if (totalLeads === 0) {
+      return { score: 100, status: 'Excellent', description: 'No pipeline leaks detected. Add new leads to qualify intent.', color: '#10b981' };
+    }
+
+    const qualifiedRatio = qualifiedLeads / totalLeads;
+    const hotRatio = hotLeads / totalLeads;
+    
+    // Formula weighting conversion rate, qualified and hot leads
+    let scoreVal = Math.round(50 + (conversionRate * 0.3) + (hotRatio * 30) + (qualifiedRatio * 20));
+    scoreVal = Math.max(10, Math.min(100, scoreVal));
+
+    let status = 'Fair';
+    let description = 'Performance lag warnings. Follow up on contacts and schedule verification site visits.';
+    let color = '#f59e0b'; // Amber
+
+    if (scoreVal >= 85) {
+      status = 'Excellent';
+      description = 'Your pipeline is in pristine condition! High conversion rate and optimal lead follow-up lags.';
+      color = '#10b981'; // Emerald
+    } else if (scoreVal >= 60) {
+      status = 'Good';
+      description = 'Your pipeline is healthy! Keep up the good work and follow up on hot stage qualification leads.';
+      color = '#10b981'; // Emerald
+    } else if (scoreVal >= 40) {
+      status = 'Fair';
+      description = 'Performance lag warnings. Follow up on contacts and schedule verification site visits.';
+      color = '#f59e0b'; // Amber
+    } else {
+      status = 'Needs Attention';
+      description = 'Critical priority breach warnings! High response times and low lead-to-won conversion rates.';
+      color = '#ef4444'; // Red
+    }
+
+    return { score: scoreVal, status, description, color };
+  };
+
+  const health = calculatePipelineHealth();
+
   // Chart Color Palettes
   const FUNNEL_COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#a78bfa', '#10b981', '#ef4444'];
 
@@ -521,19 +562,19 @@ export default function Dashboard() {
                 {/* Background circle */}
                 <circle cx="50" cy="50" r="40" stroke="var(--muted)" strokeWidth="8" fill="transparent" />
                 {/* Progress circle */}
-                <circle cx="50" cy="50" r="40" stroke="#10b981" strokeWidth="8" fill="transparent"
-                  strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * 68) / 100}
+                <circle cx="50" cy="50" r="40" stroke={health.color} strokeWidth="8" fill="transparent"
+                  strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * health.score) / 100}
                   strokeLinecap="round" className="transition-all duration-1000 ease-out" />
               </svg>
               <div className="absolute flex flex-col items-center justify-center">
-                <span className="text-2xl font-black text-foreground">68</span>
-                <span className="text-[9px] uppercase font-extrabold text-emerald-500">Good</span>
+                <span className="text-2xl font-black text-foreground">{health.score}</span>
+                <span className="text-[9px] uppercase font-extrabold" style={{ color: health.color }}>{health.status}</span>
               </div>
             </div>
 
             <div className="flex-1 space-y-2 text-left">
               <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
-                Your pipeline is <span className="text-emerald-500 font-bold">healthy</span>! Keep up the good work and follow up on hot stage qualification leads.
+                {health.description}
               </p>
               <span className="text-[10px] text-primary font-bold hover:underline cursor-pointer flex items-center space-x-1">
                 <span>View full analysis</span>
