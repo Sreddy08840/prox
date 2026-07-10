@@ -207,7 +207,7 @@ const translations = {
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [lang, setLang] = useState<'EN' | 'ES'>('EN');
+  const lang = 'EN';
   const [currentUser] = useState({ id: 'mock-user-123', role: 'ADMIN' }); // Mock Admin user
 
   const t = translations[lang];
@@ -295,12 +295,6 @@ function App() {
                 </div>
 
                 <div className="p-6 border-t flex flex-col space-y-4">
-                  <button
-                    onClick={() => setLang(lang === 'EN' ? 'ES' : 'EN')}
-                    className="flex items-center justify-between w-full px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all"
-                  >
-                    <span>{t.language}</span>
-                  </button>
                   <button
                     onClick={toggleDarkMode}
                     className="flex items-center justify-between w-full px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all"
