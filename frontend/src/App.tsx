@@ -6,8 +6,6 @@ import {
   Settings, 
   LogIn, 
   Sparkles, 
-  Sun, 
-  Moon, 
   Building2, 
   AlertCircle, 
   Sliders, 
@@ -218,13 +216,11 @@ const translations = {
 };
 
 interface MainLayoutProps {
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
   t: any;
   currentUser: { id: string; role: string };
 }
 
-function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutProps) {
+function MainLayout({ t, currentUser }: MainLayoutProps) {
   const location = useLocation();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
@@ -246,7 +242,7 @@ function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutPr
   ];
 
   return (
-    <div className={`min-h-screen flex flex-col md:flex-row bg-background text-foreground transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
+    <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground transition-colors duration-300">
       {/* Floating Modern Sidebar */}
       <aside className={`border-r border-[#1F2937]/50 bg-[#111827] text-[#CBD5E1] flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out relative z-30 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
         <div className="p-4 flex flex-col space-y-6">
@@ -343,22 +339,6 @@ function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutPr
             )}
           </button>
 
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleDarkMode}
-            className="flex items-center justify-between w-full px-3 py-2 rounded-xl border border-[#1F2937]/80 text-xs font-bold text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white transition-all duration-200"
-          >
-            {!isSidebarCollapsed ? (
-              <>
-                <span className="flex items-center space-x-2">
-                  {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
-                  <span>{isDarkMode ? t.lightMode : t.darkMode}</span>
-                </span>
-              </>
-            ) : (
-              isDarkMode ? <Sun size={14} className="mx-auto" /> : <Moon size={14} className="mx-auto" />
-            )}
-          </button>
 
           {/* Logout */}
           <Link
@@ -446,10 +426,8 @@ function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutPr
 }
 
 function App() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const lang = 'EN';
   const [currentUser] = useState({ id: 'mock-user-123', role: 'ADMIN' });
-
+  const lang = 'EN';
   const t = translations[lang];
 
   const token = localStorage.getItem('propx_auth_token');
@@ -457,11 +435,6 @@ function App() {
     window.location.href = '/login';
     return null;
   }
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
-  };
 
   return (
     <Router>
@@ -472,8 +445,6 @@ function App() {
           path="/*"
           element={
             <MainLayout
-              isDarkMode={isDarkMode}
-              toggleDarkMode={toggleDarkMode}
               t={t}
               currentUser={currentUser}
             />
