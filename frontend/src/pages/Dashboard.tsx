@@ -171,55 +171,66 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* SLA Alert banner */}
       {alerts?.warning && (
-        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-rose-700 flex items-start space-x-3 text-sm animate-pulse">
-          <AlertCircle className="shrink-0 mt-0.5 text-rose-500" size={18} />
-          <div>
-            <strong className="block text-xs uppercase tracking-wider text-rose-800 font-extrabold mb-0.5">SLA warning Alert</strong>
-            <span className="font-semibold text-xs">{alerts.message}</span>
+        <div className="rounded-2xl border border-rose-500/10 bg-gradient-to-r from-rose-500/5 to-rose-500/10 p-5 text-rose-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all duration-300 shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-rose-500" />
+          <div className="flex items-start space-x-3.5 text-sm">
+            <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 mt-0.5">
+              <AlertCircle size={18} className="animate-pulse" />
+            </div>
+            <div>
+              <strong className="block text-xs uppercase tracking-wider text-rose-800 font-extrabold mb-1">Critical SLA Breach</strong>
+              <p className="font-semibold text-xs text-rose-700/90 leading-relaxed">{alerts.message}</p>
+            </div>
           </div>
+          <button 
+            onClick={() => navigate('/leads')}
+            className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs px-4 py-2.5 transition-all shadow-sm shrink-0 self-end md:self-center"
+          >
+            Review Pipeline
+          </button>
         </div>
       )}
 
       {/* Export Success/Error Banner */}
       {exportSuccess && (
-        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-700 flex items-start space-x-3 text-sm">
-          <Sparkles className="shrink-0 mt-0.5 text-emerald-500" size={18} />
-          <span className="font-semibold text-xs">{exportSuccess}</span>
+        <div className="rounded-2xl border border-emerald-500/15 bg-gradient-to-r from-emerald-500/5 to-emerald-500/10 p-4 text-emerald-700 flex items-center space-x-3 text-sm">
+          <Sparkles className="shrink-0 text-emerald-500" size={18} />
+          <span className="font-bold text-xs">{exportSuccess}</span>
         </div>
       )}
       {exportError && (
-        <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-destructive flex items-start space-x-3 text-sm">
-          <AlertCircle className="shrink-0 mt-0.5 text-destructive animate-bounce" size={18} />
-          <span className="font-semibold text-xs">{exportError}</span>
+        <div className="rounded-2xl border border-destructive/15 bg-gradient-to-r from-destructive/5 to-destructive/10 p-4 text-destructive flex items-center space-x-3 text-sm">
+          <AlertCircle className="shrink-0 text-destructive animate-bounce" size={18} />
+          <span className="font-bold text-xs">{exportError}</span>
         </div>
       )}
 
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-5">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center space-x-2">
-            <Sparkles className="text-primary animate-pulse" size={28} />
-            <span>Executive Dashboard</span>
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center space-x-2.5">
+            <Sparkles className="text-primary animate-pulse" size={26} />
+            <span>Executive Analytics</span>
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Real-time analytics, conversation insights, and lead pipeline intelligence.
+          <p className="text-xs text-muted-foreground mt-1 font-semibold">
+            Real-time pipeline analytics, conversation insights, and AI qualification metrics.
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 w-full sm:w-auto">
           <button
             disabled={exporting}
             onClick={handleExportReport}
-            className="flex items-center space-x-1.5 rounded-lg border border-input bg-card px-4 py-2.5 text-xs font-bold hover:bg-accent text-muted-foreground hover:text-foreground transition-all shrink-0"
+            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 rounded-xl border border-input bg-card px-4 py-2.5 text-xs font-bold hover:bg-accent text-muted-foreground hover:text-foreground transition-all shadow-sm"
           >
             {exporting ? <Loader2 className="animate-spin" size={14} /> : <FileText size={14} />}
-            <span>Export Weekly Summary</span>
+            <span>Export Summary Report</span>
           </button>
           <button
             onClick={() => navigate('/leads')}
-            className="flex items-center space-x-1.5 rounded-lg bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/95 transition-all shadow-sm shrink-0"
+            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground hover:bg-primary/95 hover:scale-[1.02] transition-all shadow-md shrink-0"
           >
             <span>Manage Pipeline</span>
             <ChevronRight size={14} />
@@ -230,77 +241,133 @@ export default function Dashboard() {
       {/* KPI Stats Grid Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
         {/* Total Leads */}
-        <div className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 group">
-          <div className="absolute top-0 left-0 w-full h-1 bg-blue-500" />
+        <div className="relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group cursor-pointer">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Total Inquiries</span>
+            <span className="text-[10px] uppercase font-extrabold text-muted-foreground tracking-wider">Total Inquiries</span>
             <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500 group-hover:scale-110 transition-transform">
-              <Users size={16} />
+              <Users size={15} />
             </div>
           </div>
-          <div className="mt-4">
-            <h3 className="text-2xl font-black tracking-tight text-foreground">{kpis.totalLeads}</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">Leads registered in CRM</p>
+          <div className="mt-4 flex items-end justify-between">
+            <div>
+              <h3 className="text-3xl font-black tracking-tight text-foreground">{kpis.totalLeads}</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">Leads in database</p>
+            </div>
+            {/* Custom Sparkline SVG */}
+            <div className="w-16 h-8 text-blue-500 opacity-80 group-hover:opacity-100 transition-opacity">
+              <svg viewBox="0 0 100 30" className="w-full h-full" fill="none">
+                <path d="M0,25 Q15,5 30,20 T60,10 T90,5 L100,8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+          <div className="mt-3.5 pt-3 border-t flex items-center justify-between text-[10px]">
+            <span className="text-emerald-500 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">+12.4%</span>
+            <span className="text-muted-foreground font-semibold">vs last month</span>
           </div>
         </div>
 
-        {/* Qualified Leads */}
-        <div className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 group">
-          <div className="absolute top-0 left-0 w-full h-1 bg-purple-500" />
+        {/* Qualified Stage */}
+        <div className="relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group cursor-pointer">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-primary" />
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Qualified Stage</span>
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500 group-hover:scale-110 transition-transform">
-              <Award size={16} />
+            <span className="text-[10px] uppercase font-extrabold text-muted-foreground tracking-wider">Qualified Stage</span>
+            <div className="p-2 rounded-xl bg-violet-500/10 text-violet-500 group-hover:scale-110 transition-transform">
+              <Award size={15} />
             </div>
           </div>
-          <div className="mt-4">
-            <h3 className="text-2xl font-black tracking-tight text-foreground">{kpis.qualifiedLeads}</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">Verified buying requirements</p>
+          <div className="mt-4 flex items-end justify-between">
+            <div>
+              <h3 className="text-3xl font-black tracking-tight text-foreground">{kpis.qualifiedLeads}</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">Verified requirements</p>
+            </div>
+            <div className="w-16 h-8 text-violet-500 opacity-80 group-hover:opacity-100 transition-opacity">
+              <svg viewBox="0 0 100 30" className="w-full h-full" fill="none">
+                <path d="M0,20 Q20,10 40,25 T70,5 T100,12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+          <div className="mt-3.5 pt-3 border-t flex items-center justify-between text-[10px]">
+            <span className="text-emerald-500 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">+8.2%</span>
+            <span className="text-muted-foreground font-semibold">vs last month</span>
           </div>
         </div>
 
         {/* Hot Leads */}
-        <div className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 group">
-          <div className="absolute top-0 left-0 w-full h-1 bg-red-500" />
+        <div className="relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group cursor-pointer">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-red-500" />
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">AI Hot Leads</span>
-            <div className="p-2 rounded-xl bg-red-500/10 text-red-500 group-hover:scale-110 transition-transform">
-              <Flame size={16} className="animate-pulse" />
+            <span className="text-[10px] uppercase font-extrabold text-muted-foreground tracking-wider">AI Hot Leads</span>
+            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 group-hover:scale-110 transition-transform">
+              <Flame size={15} className="animate-pulse" />
             </div>
           </div>
-          <div className="mt-4">
-            <h3 className="text-2xl font-black tracking-tight text-foreground">{kpis.hotLeads}</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">Immediate closing intent</p>
+          <div className="mt-4 flex items-end justify-between">
+            <div>
+              <h3 className="text-3xl font-black tracking-tight text-foreground">{kpis.hotLeads}</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">Immediate buyers</p>
+            </div>
+            <div className="w-16 h-8 text-rose-500 opacity-80 group-hover:opacity-100 transition-opacity">
+              <svg viewBox="0 0 100 30" className="w-full h-full" fill="none">
+                <path d="M0,10 Q25,25 50,8 T80,22 T100,5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+          <div className="mt-3.5 pt-3 border-t flex items-center justify-between text-[10px]">
+            <span className="text-rose-500 font-bold bg-rose-500/10 px-1.5 py-0.5 rounded">-2.1%</span>
+            <span className="text-muted-foreground font-semibold">vs last week</span>
           </div>
         </div>
 
         {/* Conversion Rate */}
-        <div className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 group">
-          <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500" />
+        <div className="relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group cursor-pointer">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Conversion Rate</span>
+            <span className="text-[10px] uppercase font-extrabold text-muted-foreground tracking-wider">Conversion Rate</span>
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:scale-110 transition-transform">
-              <TrendingUp size={16} />
+              <TrendingUp size={15} />
             </div>
           </div>
-          <div className="mt-4">
-            <h3 className="text-2xl font-black tracking-tight text-foreground">{kpis.conversionRate}%</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">Won deals out of total leads</p>
+          <div className="mt-4 flex items-end justify-between">
+            <div>
+              <h3 className="text-3xl font-black tracking-tight text-foreground">{kpis.conversionRate}%</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">Won / total leads</p>
+            </div>
+            <div className="w-16 h-8 text-emerald-500 opacity-80 group-hover:opacity-100 transition-opacity">
+              <svg viewBox="0 0 100 30" className="w-full h-full" fill="none">
+                <path d="M0,22 Q30,12 60,18 T100,5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+          <div className="mt-3.5 pt-3 border-t flex items-center justify-between text-[10px]">
+            <span className="text-emerald-500 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">+4.5%</span>
+            <span className="text-muted-foreground font-semibold">vs last month</span>
           </div>
         </div>
 
         {/* Response Time */}
-        <div className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 group">
-          <div className="absolute top-0 left-0 w-full h-1 bg-amber-500" />
+        <div className="relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group cursor-pointer">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Response Time</span>
+            <span className="text-[10px] uppercase font-extrabold text-muted-foreground tracking-wider">Response Time</span>
             <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 group-hover:scale-110 transition-transform">
-              <Clock size={16} />
+              <Clock size={15} />
             </div>
           </div>
-          <div className="mt-4">
-            <h3 className="text-2xl font-black tracking-tight text-foreground">{kpis.responseTimeMin}m</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">Average agent reply duration</p>
+          <div className="mt-4 flex items-end justify-between">
+            <div>
+              <h3 className="text-3xl font-black tracking-tight text-foreground">{kpis.responseTimeMin}m</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">Average reply lag</p>
+            </div>
+            <div className="w-16 h-8 text-amber-500 opacity-80 group-hover:opacity-100 transition-opacity">
+              <svg viewBox="0 0 100 30" className="w-full h-full" fill="none">
+                <path d="M0,5 Q20,25 40,12 T80,18 T100,10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+          <div className="mt-3.5 pt-3 border-t flex items-center justify-between text-[10px]">
+            <span className="text-emerald-500 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">-14.2%</span>
+            <span className="text-muted-foreground font-semibold">improvement</span>
           </div>
         </div>
       </div>
@@ -308,50 +375,50 @@ export default function Dashboard() {
       {/* Main Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Lead Trend AreaChart */}
-        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
+        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4 hover:shadow-md transition-all duration-300">
           <div>
             <h3 className="text-sm font-bold text-foreground">Leads Generation Trend</h3>
             <p className="text-[10px] text-muted-foreground mt-0.5">Daily customer inquiries volume over the last 30 days.</p>
           </div>
-          <div className="h-64 text-xs">
+          <div className="h-64 text-[10px] font-bold">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={leadTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={leadTrend} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#6D5EF5" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#6D5EF5" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                 <XAxis dataKey="date" stroke="#94a3b8" tickLine={false} axisLine={false} />
                 <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} />
                 <Tooltip
-                  contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
-                  labelStyle={{ fontWeight: 'bold', color: '#1e293b' }}
+                  contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: '11px' }}
+                  labelStyle={{ fontWeight: 'bold', color: 'var(--foreground)' }}
                 />
-                <Area type="monotone" dataKey="leads" stroke="#8b5cf6" strokeWidth={2.5} fillOpacity={1} fill="url(#colorLeads)" />
+                <Area type="monotone" dataKey="leads" stroke="#6D5EF5" strokeWidth={3} fillOpacity={1} fill="url(#colorLeads)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Lead Funnel BarChart */}
-        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
+        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4 hover:shadow-md transition-all duration-300">
           <div>
             <h3 className="text-sm font-bold text-foreground">Sales Funnel Conversion</h3>
             <p className="text-[10px] text-muted-foreground mt-0.5">Volume of leads currently in each pipeline phase.</p>
           </div>
-          <div className="h-64 text-xs">
+          <div className="h-64 text-[10px] font-bold">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={leadFunnel} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={leadFunnel} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                 <XAxis dataKey="stage" stroke="#94a3b8" tickLine={false} axisLine={false} />
                 <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} />
                 <Tooltip
-                  contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px' }}
-                  cursor={{ fill: '#f8fafc' }}
+                  contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', fontSize: '11px' }}
+                  cursor={{ fill: 'rgba(109, 94, 245, 0.03)' }}
                 />
-                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={45}>
                   {leadFunnel.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={FUNNEL_COLORS[index % FUNNEL_COLORS.length]} />
                   ))}

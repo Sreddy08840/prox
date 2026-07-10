@@ -300,6 +300,16 @@ export const getLeads = async (
             },
           },
         },
+        aiInsight: {
+          select: {
+            id: true,
+            leadScore: true,
+            reasoning: true,
+            preferredUnit: true,
+            budget: true,
+            timeline: true,
+          },
+        },
       },
     });
 

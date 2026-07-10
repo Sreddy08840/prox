@@ -1,6 +1,21 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { LayoutDashboard, Users, Settings, LogIn, Sparkles, Sun, Moon, Building2, AlertCircle, Sliders, MessageSquare } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Users, 
+  Settings, 
+  LogIn, 
+  Sparkles, 
+  Sun, 
+  Moon, 
+  Building2, 
+  AlertCircle, 
+  Sliders, 
+  Search,
+  ChevronDown,
+  Calendar,
+  ChevronRight
+} from 'lucide-react';
 import AcceptInvitation from './pages/AcceptInvitation';
 import OrgProfilePanel from './components/OrgProfilePanel';
 import TeamManagementPanel from './components/TeamManagementPanel';
@@ -202,10 +217,238 @@ const translations = {
   }
 };
 
+interface MainLayoutProps {
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
+  t: any;
+  currentUser: { id: string; role: string };
+}
+
+function MainLayout({ isDarkMode, toggleDarkMode, t, currentUser }: MainLayoutProps) {
+  const location = useLocation();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  const navItems = [
+    { to: '/', label: t.dashboard, icon: LayoutDashboard },
+    { to: '/projects', label: t.projects, icon: Building2 },
+    { to: '/leads', label: t.leads, icon: Users },
+    { to: '/tenants', label: t.tenants, icon: Users },
+    { to: '/settings', label: t.settings, icon: Settings },
+  ];
+
+  return (
+    <div className={`min-h-screen flex flex-col md:flex-row bg-background text-foreground transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
+      {/* Floating Modern Sidebar */}
+      <aside className={`border-r bg-card flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out relative z-30 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
+        <div className="p-4 flex flex-col space-y-6">
+          {/* Workspace Selector Mockup */}
+          <div className="flex items-center justify-between">
+            {!isSidebarCollapsed ? (
+              <div 
+                onClick={() => setWorkspaceOpen(!workspaceOpen)}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl border bg-muted/20 hover:bg-muted/40 hover:border-muted-foreground/20 transition-all cursor-pointer select-none relative"
+              >
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-primary to-violet-600 flex items-center justify-center font-extrabold text-xs text-white shadow-sm">
+                    P
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-xs font-bold tracking-tight text-foreground">PropX Enterprise</span>
+                    <span className="text-[10px] text-muted-foreground font-semibold">Workspace</span>
+                  </div>
+                </div>
+                <ChevronDown size={14} className={`text-muted-foreground transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
+                {workspaceOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 border bg-popover text-popover-foreground rounded-xl shadow-lg p-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-2 py-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Workspaces</div>
+                    <div className="px-2 py-1.5 text-xs font-semibold rounded-lg bg-accent text-accent-foreground">PropX Enterprise</div>
+                    <div className="px-2 py-1.5 text-xs font-semibold rounded-lg hover:bg-accent/50 transition-colors">PropX Personal</div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-to-tr from-primary to-violet-600 flex items-center justify-center font-extrabold text-sm text-white shadow-sm">
+                P
+              </div>
+            )}
+          </div>
+
+          {/* Navigation Items */}
+          <nav className="space-y-1">
+            {navItems.map((item) => {
+              const active = isActive(item.to);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                    active
+                      ? 'bg-primary text-white shadow-sm border border-primary/20 scale-[1.02]'
+                      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                  }`}
+                >
+                  <Icon size={16} className={`shrink-0 ${active ? 'text-white' : 'text-muted-foreground group-hover:text-primary transition-colors'}`} />
+                  {!isSidebarCollapsed && <span className="tracking-tight">{item.label}</span>}
+                  
+                  {active && !isSidebarCollapsed && (
+                    <span className="absolute right-3 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  )}
+                </Link>
+              );
+            })}
+            
+            {currentUser.role === 'ADMIN' && (
+              <Link
+                to="/admin"
+                className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                  isActive('/admin')
+                    ? 'bg-primary text-white shadow-sm border border-primary/20 scale-[1.02]'
+                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                }`}
+              >
+                <Sliders size={16} className={`shrink-0 ${isActive('/admin') ? 'text-white' : 'text-muted-foreground group-hover:text-primary transition-colors'}`} />
+                {!isSidebarCollapsed && <span className="tracking-tight">{t.adminPanel}</span>}
+                {isActive('/admin') && !isSidebarCollapsed && (
+                  <span className="absolute right-3 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                )}
+              </Link>
+            )}
+          </nav>
+        </div>
+
+        {/* Sidebar Footer with Theme Toggle, Collapse, and Logout */}
+        <div className="p-4 border-t flex flex-col space-y-2">
+          {/* Collapse sidebar button */}
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="flex items-center justify-between w-full px-3 py-2 rounded-xl border text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+          >
+            {!isSidebarCollapsed ? (
+              <>
+                <span>Collapse Sidebar</span>
+                <ChevronRight size={14} className="rotate-180" />
+              </>
+            ) : (
+              <ChevronRight size={14} className="mx-auto" />
+            )}
+          </button>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleDarkMode}
+            className="flex items-center justify-between w-full px-3 py-2 rounded-xl border text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+          >
+            {!isSidebarCollapsed ? (
+              <>
+                <span className="flex items-center space-x-2">
+                  {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
+                  <span>{isDarkMode ? t.lightMode : t.darkMode}</span>
+                </span>
+              </>
+            ) : (
+              isDarkMode ? <Sun size={14} className="mx-auto" /> : <Moon size={14} className="mx-auto" />
+            )}
+          </button>
+
+          {/* Logout */}
+          <Link
+            to="/login"
+            onClick={() => localStorage.removeItem('propx_auth_token')}
+            className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold text-destructive hover:bg-destructive/10 transition-all duration-200"
+          >
+            <LogIn size={16} className="shrink-0" />
+            {!isSidebarCollapsed && <span className="tracking-tight">{t.logout}</span>}
+          </Link>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Global Premium Header Bar */}
+        <header className="h-16 border-b bg-card flex items-center justify-between px-6 md:px-10 shrink-0 relative z-20 shadow-sm">
+          
+          {/* Global Search Bar Mockup */}
+          <div className="hidden md:flex items-center space-x-2 relative w-72 lg:w-96">
+            <Search className={`absolute left-3.5 transition-colors ${searchFocused ? 'text-primary' : 'text-muted-foreground'}`} size={15} />
+            <input
+              type="text"
+              placeholder="Search projects, leads, pipelines... (⌘K)"
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              className="w-full pl-10 pr-12 py-2 border rounded-full bg-muted/20 hover:bg-muted/40 focus:bg-background focus:ring-2 focus:ring-primary/20 text-xs font-medium focus:outline-none transition-all duration-200"
+            />
+            <span className="absolute right-3.5 top-2.5 px-1.5 py-0.5 rounded border bg-card text-[9px] font-bold text-muted-foreground uppercase select-none tracking-wider">
+              ⌘K
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-4 ml-auto">
+            {/* Quick Date Filter Dropdown */}
+            <div className="hidden sm:flex items-center bg-muted/20 border hover:bg-muted/40 transition-all px-3 py-1.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-foreground cursor-pointer select-none space-x-1.5">
+              <Calendar size={13} />
+              <span>All Time</span>
+              <ChevronDown size={11} />
+            </div>
+
+            {/* AI Assistant Quick Copilot Button */}
+            <button className="flex items-center space-x-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/15 transition-all px-3.5 py-1.5 text-[11px] font-extrabold text-primary shadow-sm hover:scale-[1.02]">
+              <Sparkles size={13} className="animate-pulse" />
+              <span>AI Copilot</span>
+            </button>
+
+            {/* Notifications Panel */}
+            <div className="shrink-0">
+              <NotificationCenter />
+            </div>
+
+            {/* User Profile Avatar with Role Dropdown */}
+            <div className="flex items-center space-x-2 pl-2 border-l">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-primary flex items-center justify-center font-bold text-xs text-white shadow-sm border border-card">
+                AD
+              </div>
+              <div className="hidden xl:flex flex-col text-left">
+                <span className="text-[11px] font-bold text-foreground">Admin User</span>
+                <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-extrabold">{currentUser.role}</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Scrollable Routing Main Frame */}
+        <main className="flex-1 p-6 md:p-10 overflow-y-auto w-full max-w-7xl mx-auto">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:id" element={<ProjectDetail />} />
+            <Route path="/leads" element={<Leads />} />
+            <Route path="/leads/:id" element={<LeadDetail />} />
+            <Route path="/tenants" element={<Tenants />} />
+            <Route
+              path="/settings"
+              element={<SettingsPage currentUser={currentUser} />}
+            />
+            <Route path="/admin" element={<AdminPanel />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const lang = 'EN';
-  const [currentUser] = useState({ id: 'mock-user-123', role: 'ADMIN' }); // Mock Admin user
+  const [currentUser] = useState({ id: 'mock-user-123', role: 'ADMIN' });
 
   const t = translations[lang];
 
@@ -228,113 +471,12 @@ function App() {
         <Route
           path="/*"
           element={
-            <div className={`min-h-screen flex flex-col md:flex-row bg-background text-foreground ${isDarkMode ? 'dark' : ''}`}>
-              {/* Sidebar Navigation */}
-              <aside className="w-full md:w-64 border-r bg-card flex flex-col justify-between shrink-0">
-                <div className="p-6">
-                  <div className="flex items-center space-x-2.5 font-bold text-xl tracking-tight text-primary">
-                    <Sparkles className="animate-pulse" />
-                    <span>PropX</span>
-                  </div>
-                  <nav className="mt-8 space-y-1.5">
-                    <Link
-                      to="/"
-                      className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                    >
-                      <LayoutDashboard size={18} />
-                      <span>{t.dashboard}</span>
-                    </Link>
-                    <Link
-                      to="/projects"
-                      className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                    >
-                      <Building2 size={18} />
-                      <span>{t.projects}</span>
-                    </Link>
-                    <Link
-                      to="/leads"
-                      className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                    >
-                      <Users size={18} />
-                      <span>{t.leads}</span>
-                    </Link>
-                    <Link
-                      to="/tenants"
-                      className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                    >
-                      <Users size={18} />
-                      <span>{t.tenants}</span>
-                    </Link>
-                    <Link
-                      to="/settings"
-                      className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                    >
-                      <Settings size={18} />
-                      <span>{t.settings}</span>
-                    </Link>
-                    {currentUser.role === 'ADMIN' && (
-                      <Link
-                        to="/admin"
-                        className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                      >
-                        <Sliders size={18} />
-                        <span>{t.adminPanel}</span>
-                      </Link>
-                    )}
-                  </nav>
-                </div>
-
-                <div className="p-6 border-t flex flex-col space-y-4">
-                  <button
-                    onClick={toggleDarkMode}
-                    className="flex items-center justify-between w-full px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all"
-                  >
-                    <span className="flex items-center space-x-2">
-                      {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-                      <span>{isDarkMode ? t.lightMode : t.darkMode}</span>
-                    </span>
-                  </button>
-                  <Link
-                    to="/login"
-                    className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <LogIn size={18} />
-                    <span>{t.logout}</span>
-                  </Link>
-                </div>
-              </aside>
-
-              {/* Main Content Body & Header Wrapper */}
-              <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                {/* Global Header Bar */}
-                <header className="h-16 border-b bg-card flex items-center justify-between px-6 md:px-10 shrink-0">
-                  <div className="text-xs text-muted-foreground font-semibold flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>{t.crmStatus}</span>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <NotificationCenter />
-                  </div>
-                </header>
-
-                {/* Main Scrollable Router Content */}
-                <main className="flex-1 p-6 md:p-10 overflow-y-auto w-full max-w-7xl mx-auto">
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/projects" element={<Projects />} />
-                    <Route path="/projects/:id" element={<ProjectDetail />} />
-                    <Route path="/leads" element={<Leads />} />
-                    <Route path="/leads/:id" element={<LeadDetail />} />
-                    <Route path="/tenants" element={<Tenants />} />
-                    <Route
-                      path="/settings"
-                      element={<SettingsPage currentUser={currentUser} />}
-                    />
-                    <Route path="/admin" element={<AdminPanel />} />
-                  </Routes>
-                </main>
-              </div>
-            </div>
+            <MainLayout
+              isDarkMode={isDarkMode}
+              toggleDarkMode={toggleDarkMode}
+              t={t}
+              currentUser={currentUser}
+            />
           }
         />
       </Routes>

@@ -16,6 +16,8 @@ import {
   FileSpreadsheet,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface Lead {
@@ -38,6 +40,14 @@ interface Lead {
     project: {
       name: string;
     };
+  } | null;
+  aiInsight?: {
+    id: string;
+    leadScore: 'HOT' | 'WARM' | 'COLD';
+    reasoning: string | null;
+    preferredUnit: string | null;
+    budget: string | null;
+    timeline: string | null;
   } | null;
 }
 
@@ -78,6 +88,9 @@ export default function Leads() {
     limit: 10,
     totalPages: 1,
   });
+
+  // Row Expand State
+  const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
 
   // Modal Creation Form State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -423,10 +436,11 @@ export default function Leads() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="w-full overflow-x-auto border rounded-xl bg-card shadow-sm">
+          <div className="w-full overflow-x-auto border rounded-2xl bg-card shadow-sm">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b bg-muted/40 font-semibold uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b bg-muted/40 font-bold uppercase tracking-wider text-muted-foreground text-[10px]">
+                  <th className="px-4 py-4 w-12 text-center">AI</th>
                   <th className="px-6 py-4">Lead Name</th>
                   <th className="px-6 py-4">Contact Info</th>
                   <th className="px-6 py-4 text-right">Budget</th>
@@ -437,86 +451,161 @@ export default function Leads() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {leads.map((lead) => (
-                  <tr
-                    key={lead.id}
-                    onClick={() => navigate(`/leads/${lead.id}`)}
-                    className="hover:bg-muted/10 transition-colors cursor-pointer"
-                  >
-                    {/* Name */}
-                    <td className="px-6 py-4 font-bold text-foreground">
-                      {lead.firstName} {lead.lastName}
-                    </td>
-
-                    {/* Contact */}
-                    <td className="px-6 py-4 space-y-1">
-                      {lead.phone && (
-                        <div className="flex items-center space-x-1.5 text-muted-foreground">
-                          <Phone size={12} />
-                          <span>{lead.phone}</span>
-                        </div>
-                      )}
-                      {lead.email && (
-                        <div className="flex items-center space-x-1.5 text-muted-foreground">
-                          <Mail size={12} />
-                          <span className="truncate max-w-[150px]">{lead.email}</span>
-                        </div>
-                      )}
-                      {!lead.phone && !lead.email && <span className="text-muted-foreground/60">No contact info</span>}
-                    </td>
-
-                    {/* Budget */}
-                    <td className="px-6 py-4 text-right font-black text-foreground">
-                      {lead.budget ? (
-                        <span className="flex items-center justify-end">
-                          <IndianRupee size={13} className="text-emerald-500 shrink-0" />
-                          {parseFloat(lead.budget).toLocaleString('en-IN', {
-                            minimumFractionDigits: 0,
-                          })}
-                        </span>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-
-                    {/* Source */}
-                    <td className="px-6 py-4 text-muted-foreground font-semibold">
-                      {lead.source || 'Website'}
-                    </td>
-
-                    {/* Agent */}
-                    <td className="px-6 py-4 font-medium text-muted-foreground">
-                      {lead.assignedUser ? (
-                        `${lead.assignedUser.firstName} ${lead.assignedUser.lastName}`
-                      ) : (
-                        <span className="text-muted-foreground/40 italic">Unassigned</span>
-                      )}
-                    </td>
-
-                    {/* Unit */}
-                    <td className="px-6 py-4 space-y-0.5 text-muted-foreground">
-                      {lead.preferredUnit ? (
-                        <>
-                          <div className="font-bold text-foreground">{lead.preferredUnit.unitNumber}</div>
-                          <div className="text-[10px]">{lead.preferredUnit.project?.name}</div>
-                        </>
-                      ) : (
-                        <span className="text-muted-foreground/40">—</span>
-                      )}
-                    </td>
-
-                    {/* Status Badge */}
-                    <td className="px-6 py-4 text-center">
-                      <span
-                        className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide border ${getStatusBadge(
-                          lead.status,
-                        )}`}
+                {leads.map((lead) => {
+                  const isExpanded = expandedLeadId === lead.id;
+                  return (
+                    <React.Fragment key={lead.id}>
+                      <tr
+                        onClick={() => navigate(`/leads/${lead.id}`)}
+                        className={`hover:bg-muted/10 transition-colors cursor-pointer ${isExpanded ? 'bg-muted/5' : ''}`}
                       >
-                        {lead.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                        {/* Expand Button */}
+                        <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => setExpandedLeadId(isExpanded ? null : lead.id)}
+                            className="p-1 rounded-lg hover:bg-muted text-muted-foreground transition-all duration-200"
+                          >
+                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </button>
+                        </td>
+
+                        {/* Name */}
+                        <td className="px-6 py-4 font-extrabold text-foreground">
+                          {lead.firstName} {lead.lastName}
+                        </td>
+
+                        {/* Contact */}
+                        <td className="px-6 py-4 space-y-1">
+                          {lead.phone && (
+                            <div className="flex items-center space-x-1.5 text-muted-foreground font-medium">
+                              <Phone size={11} className="text-muted-foreground/60" />
+                              <span>{lead.phone}</span>
+                            </div>
+                          )}
+                          {lead.email && (
+                            <div className="flex items-center space-x-1.5 text-muted-foreground font-medium">
+                              <Mail size={11} className="text-muted-foreground/60" />
+                              <span className="truncate max-w-[150px]">{lead.email}</span>
+                            </div>
+                          )}
+                          {!lead.phone && !lead.email && <span className="text-muted-foreground/40 italic">No contact info</span>}
+                        </td>
+
+                        {/* Budget */}
+                        <td className="px-6 py-4 text-right font-black text-foreground">
+                          {lead.budget ? (
+                            <span className="flex items-center justify-end">
+                              <IndianRupee size={12} className="text-emerald-500 shrink-0 mr-0.5" />
+                              {parseFloat(lead.budget).toLocaleString('en-IN', {
+                                minimumFractionDigits: 0,
+                              })}
+                            </span>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+
+                        {/* Source */}
+                        <td className="px-6 py-4 text-muted-foreground font-bold">
+                          {lead.source || 'Website'}
+                        </td>
+
+                        {/* Agent */}
+                        <td className="px-6 py-4">
+                          {lead.assignedUser ? (
+                            <div className="flex items-center space-x-2">
+                              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-extrabold text-[9px] border border-primary/20">
+                                {((lead.assignedUser.firstName?.[0] || '') + (lead.assignedUser.lastName?.[0] || '')).toUpperCase()}
+                              </div>
+                              <span className="font-bold text-foreground">{lead.assignedUser.firstName} {lead.assignedUser.lastName}</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground/45 italic font-medium">Unassigned</span>
+                          )}
+                        </td>
+
+                        {/* Unit */}
+                        <td className="px-6 py-4 space-y-0.5 text-muted-foreground">
+                          {lead.preferredUnit ? (
+                            <>
+                              <div className="font-extrabold text-foreground">{lead.preferredUnit.unitNumber}</div>
+                              <div className="text-[10px] font-semibold">{lead.preferredUnit.project?.name}</div>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground/40">—</span>
+                          )}
+                        </td>
+
+                        {/* Status Badge */}
+                        <td className="px-6 py-4 text-center">
+                          <span
+                            className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide border ${getStatusBadge(
+                              lead.status,
+                            )}`}
+                          >
+                            {lead.status}
+                          </span>
+                        </td>
+                      </tr>
+                      {/* Expandable row */}
+                      {isExpanded && (
+                        <tr className="bg-muted/5">
+                          <td colSpan={8} className="px-6 py-4 border-t border-b">
+                            <div className="rounded-xl border bg-card p-4 space-y-3 shadow-inner text-left max-w-4xl">
+                              <div className="flex items-center space-x-2">
+                                <Sparkles className="text-primary animate-pulse" size={14} />
+                                <span className="text-xs font-black text-foreground">AI Lead Insight & Qualification</span>
+                                {lead.aiInsight?.leadScore ? (
+                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                    lead.aiInsight.leadScore === 'HOT' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20 animate-pulse' :
+                                    lead.aiInsight.leadScore === 'WARM' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
+                                    'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                                  }`}>
+                                    {lead.aiInsight.leadScore} Lead
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-muted text-muted-foreground border">
+                                    UNSCORED
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1.5 text-[11px] font-bold text-muted-foreground border-b pb-3">
+                                <div>
+                                  <span className="uppercase text-[9px] tracking-wider block text-muted-foreground/60 mb-0.5">Budget Segment</span>
+                                  <span className="text-foreground">
+                                    {lead.aiInsight?.budget ? `₹${parseFloat(lead.aiInsight.budget).toLocaleString('en-IN')}` : lead.budget ? `₹${parseFloat(lead.budget).toLocaleString('en-IN')}` : 'Undetermined'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="uppercase text-[9px] tracking-wider block text-muted-foreground/60 mb-0.5">Timeline</span>
+                                  <span className="text-foreground">{lead.aiInsight?.timeline || 'Undetermined'}</span>
+                                </div>
+                                <div>
+                                  <span className="uppercase text-[9px] tracking-wider block text-muted-foreground/60 mb-0.5">Layout Match</span>
+                                  <span className="text-foreground">{lead.aiInsight?.preferredUnit || 'Undetermined'}</span>
+                                </div>
+                              </div>
+
+                              <div className="pt-1">
+                                <span className="uppercase text-[9px] tracking-wider block text-muted-foreground/60 mb-1 font-bold">Qualification Rationale</span>
+                                {lead.aiInsight?.reasoning ? (
+                                  <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+                                    {lead.aiInsight.reasoning}
+                                  </p>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground/50 italic font-medium">
+                                    No transaction or conversation transcript has been qualifications-scored yet. Chat with the customer to generate insights.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>

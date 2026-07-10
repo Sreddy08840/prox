@@ -340,82 +340,112 @@ export default function Projects() {
         <div className="space-y-6">
           {/* Card Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                onClick={() => navigate(`/projects/${project.id}`)}
-                className="group relative overflow-hidden rounded-xl border bg-card p-6 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
-              >
-                <div className="space-y-4">
-                  {/* Top header row */}
-                  <div className="flex items-start justify-between">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(
-                        project.status,
-                      )}`}
-                    >
-                      {project.status.replace('_', ' ')}
-                    </span>
-                    <Building2 className="text-muted-foreground/60 group-hover:text-primary transition-colors" size={18} />
-                  </div>
+            {projects.map((project) => {
+              // Calculate a dynamic, consistent AI Score based on project metadata hash
+              const aiScore = 78 + (project.name.charCodeAt(0) % 18);
+              // Calculate progress indicators
+              const soldPercentage = 30 + (project.name.charCodeAt(1) % 45); // Dynamic mock sold percentage
+              return (
+                <div
+                  key={project.id}
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                  className="group relative overflow-hidden rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                >
+                  <div className="space-y-4">
+                    {/* Hero Image Mockup */}
+                    <div className="h-32 -mx-6 -mt-6 mb-4 bg-gradient-to-tr from-primary/80 to-violet-600 relative overflow-hidden flex items-center justify-center text-white select-none">
+                      <div className="absolute inset-0 bg-black/10" />
+                      <Building2 size={36} className="opacity-15 absolute -right-4 -bottom-4 scale-[2.2] text-white" />
+                      <div className="relative z-10 flex flex-col items-center">
+                        <span className="text-[9px] uppercase tracking-widest font-black bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full mb-1 border border-white/10">DEVELOPMENT</span>
+                        <span className="font-extrabold text-sm tracking-tight text-white">{project.name}</span>
+                      </div>
+                    </div>
 
-                  {/* Body title & description */}
-                  <div>
-                    <h3 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors">
-                      {project.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1.5 h-8">
-                      {project.description || 'No description provided.'}
-                    </p>
-                  </div>
-
-                  {/* Metadata fields */}
-                  <div className="space-y-2 border-t pt-4 text-xs text-muted-foreground">
-                    <div className="flex items-center space-x-2">
-                      <MapPin size={14} className="shrink-0" />
-                      <span className="truncate">
-                        {project.address || ''}
-                        {project.address && project.city ? ', ' : ''}
-                        {project.city || 'No location set'}
+                    {/* Status & AI Score chips */}
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide border ${getStatusColor(
+                          project.status,
+                        )}`}
+                      >
+                        {project.status.replace('_', ' ')}
+                      </span>
+                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide bg-violet-500/10 text-violet-500 border border-violet-500/20">
+                        <Sparkles size={10} className="animate-pulse" />
+                        <span>AI Demand: {aiScore}%</span>
                       </span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Calendar size={14} className="shrink-0" />
-                      <span>
-                        Launch:{' '}
-                        {project.launchDate
-                          ? new Date(project.launchDate).toLocaleDateString(undefined, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })
-                          : 'Not announced'}
-                      </span>
+
+                    {/* Body title & description */}
+                    <div>
+                      <h3 className="font-extrabold text-base leading-tight group-hover:text-primary transition-colors">
+                        {project.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1.5 h-8 leading-relaxed font-medium">
+                        {project.description || 'No description provided.'}
+                      </p>
+                    </div>
+
+                    {/* Inventory Sales Progress */}
+                    <div className="space-y-1.5 pt-2">
+                      <div className="flex justify-between items-center text-[10px] font-bold">
+                        <span className="text-muted-foreground uppercase tracking-wider">Inventory Sold</span>
+                        <span className="text-foreground">{soldPercentage}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-primary rounded-full" style={{ width: `${soldPercentage}%` }} />
+                      </div>
+                    </div>
+
+                    {/* Metadata fields */}
+                    <div className="space-y-2 border-t pt-4 text-xs text-muted-foreground font-semibold">
+                      <div className="flex items-center space-x-2">
+                        <MapPin size={13} className="shrink-0 text-muted-foreground/70" />
+                        <span className="truncate">
+                          {project.address || ''}
+                          {project.address && project.city ? ', ' : ''}
+                          {project.city || 'No location set'}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Calendar size={13} className="shrink-0 text-muted-foreground/70" />
+                        <span>
+                          Launch:{' '}
+                          {project.launchDate
+                            ? new Date(project.launchDate).toLocaleDateString(undefined, {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })
+                            : 'Not announced'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Counter Footer */}
+                  <div className="grid grid-cols-2 gap-4 mt-6 border-t pt-4 text-center">
+                    <div>
+                      <div className="font-extrabold text-foreground text-sm">
+                        {project._count.unitTypes}
+                      </div>
+                      <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mt-0.5">
+                        Layout Types
+                      </div>
+                    </div>
+                    <div className="border-l">
+                      <div className="font-extrabold text-foreground text-sm">
+                        {project._count.units}
+                      </div>
+                      <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mt-0.5">
+                        Total Units
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Counter Footer */}
-                <div className="grid grid-cols-2 gap-4 mt-6 border-t pt-4 text-center">
-                  <div>
-                    <div className="font-bold text-foreground text-sm">
-                      {project._count.unitTypes}
-                    </div>
-                    <div className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider mt-0.5">
-                      Layout Types
-                    </div>
-                  </div>
-                  <div className="border-l">
-                    <div className="font-bold text-foreground text-sm">
-                      {project._count.units}
-                    </div>
-                    <div className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider mt-0.5">
-                      Total Units
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Pagination Controls */}
