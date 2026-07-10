@@ -1,7 +1,7 @@
 import rateLimit from 'express-rate-limit';
 
 const windowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10); // Default 15 minutes
-const max = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10); // Limit each IP to 100 requests per windowMs
+const max = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000', 10); // Limit each IP to 1000 requests per windowMs
 
 export const rateLimiter = rateLimit({
   windowMs,
