@@ -29,7 +29,7 @@ export default function Reports() {
         <div>
           <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center space-x-2.5">
             <TrendingUp className="text-primary animate-pulse" size={26} />
-            <span>Reports & Analytics</span>
+            <span>Reports</span>
           </h1>
           <p className="text-xs text-muted-foreground mt-1 font-semibold">
             Enterprise analytics, ROI summaries, and channel conversion reports.
@@ -105,7 +105,7 @@ export default function Reports() {
             <h3 className="text-sm font-bold text-foreground">Generated Reports Log</h3>
             <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">Audit log list of spreadsheet exports and performance reports.</p>
           </div>
-          
+
           <div className="space-y-3 mt-2 text-left">
             {/* Report 1 */}
             <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/5 hover:bg-muted/10 transition-all cursor-pointer group">

@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Users, 
@@ -236,9 +236,62 @@ interface MainLayoutProps {
 
 function MainLayout({ t, currentUser }: MainLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
+
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
+  const [selectedDateFilter, setSelectedDateFilter] = useState('All Time');
+  const [isCopilotDrawerOpen, setIsCopilotDrawerOpen] = useState(false);
+  const [copilotMessages, setCopilotMessages] = useState<string[]>([
+    'Hello! I am the global PropX AI Copilot. How can I help you manage your CRM workspace or qualify deals today?',
+  ]);
+  const [copilotInput, setCopilotInput] = useState('');
+
+  // Handle hotkeys (⌘K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchModalOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const searchResults = [
+    { name: 'Dashboard overview', url: '/', category: 'Navigation' },
+    { name: 'Projects listing', url: '/projects', category: 'Navigation' },
+    { name: 'Leads directory list', url: '/leads', category: 'Navigation' },
+    { name: 'Deals Pipelines Kanban board', url: '/pipelines', category: 'Navigation' },
+    { name: 'Conversations chats history', url: '/conversations', category: 'Navigation' },
+    { name: 'SLA Alerts Feed', url: '/notifications', category: 'Navigation' },
+    { name: 'AI Sandbox Simulator panel', url: '/sandbox', category: 'Navigation' },
+    { name: 'Project Skyline details page', url: '/projects', category: 'Content' },
+    { name: 'Rashid Al-Mansoori (Hot Lead)', url: '/leads', category: 'Content' },
+  ].filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const handleSendCopilotMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!copilotInput.trim()) return;
+
+    const userText = copilotInput;
+    setCopilotMessages(prev => [...prev, `USER: ${userText}`]);
+    setCopilotInput('');
+
+    setTimeout(() => {
+      let aiText = "I qualified the workspace dashboard stats. The conversions are fully matching the Q2 targets.";
+      if (userText.toLowerCase().includes('rashid') || userText.toLowerCase().includes('mansoori')) {
+        aiText = "Lead Rashid Al-Mansoori is qualified as HOT with a budget of ₹4.5 Cr. Recommended action: Send layout option details.";
+      } else if (userText.toLowerCase().includes('sla') || userText.toLowerCase().includes('breach')) {
+        aiText = "SLA Alert breach: lead-to-won conversion rate warning threshold is currently active. Response lag on Emma exceeds 10m.";
+      }
+      setCopilotMessages(prev => [...prev, `AI: ${aiText}`]);
+    }, 700);
+  };
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -413,34 +466,55 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Global Premium Header Bar */}
         <header className="h-16 sticky top-0 border-b bg-white/85 backdrop-blur-md flex items-center justify-between px-6 md:px-10 shrink-0 relative z-20 shadow-sm">
-          
-          {/* Global Search Bar Mockup */}
-          <div className="hidden md:flex items-center space-x-2 relative w-72 lg:w-96">
-            <Search className={`absolute left-3.5 transition-colors ${searchFocused ? 'text-primary' : 'text-muted-foreground'}`} size={15} />
-            <input
-              type="text"
-              placeholder="Search projects, leads, pipelines... (⌘K)"
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setSearchFocused(false)}
-              className="w-full pl-10 pr-12 py-2 border rounded-full bg-muted/20 hover:bg-muted/40 focus:bg-background focus:ring-2 focus:ring-primary/20 text-xs font-medium focus:outline-none transition-all duration-200"
-            />
+          <div 
+            onClick={() => setIsSearchModalOpen(true)}
+            className="hidden md:flex items-center space-x-2 relative w-72 lg:w-96 cursor-pointer select-none"
+          >
+            <Search className="absolute left-3.5 text-muted-foreground" size={15} />
+            <div className="w-full pl-10 pr-12 py-2 border rounded-full bg-muted/20 hover:bg-muted/40 text-xs font-semibold text-muted-foreground text-left transition-all duration-200">
+              Search projects, leads, pipelines... (⌘K)
+            </div>
             <span className="absolute right-3.5 top-2.5 px-1.5 py-0.5 rounded border bg-card text-[9px] font-bold text-muted-foreground uppercase select-none tracking-wider">
               ⌘K
             </span>
           </div>
 
           <div className="flex items-center space-x-4 ml-auto">
-            {/* Quick Date Filter Dropdown */}
-            <div className="hidden sm:flex items-center bg-muted/20 border hover:bg-muted/40 transition-all px-3 py-1.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-foreground cursor-pointer select-none space-x-1.5">
-              <Calendar size={13} />
-              <span>All Time</span>
-              <ChevronDown size={11} />
+            {/* Quick Date Filter Dropdown Selector */}
+            <div className="relative">
+              <div 
+                onClick={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
+                className="hidden sm:flex items-center bg-muted/20 border hover:bg-muted/40 transition-all px-3 py-1.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-foreground cursor-pointer select-none space-x-1.5"
+              >
+                <Calendar size={13} />
+                <span>{selectedDateFilter}</span>
+                <ChevronDown size={11} className={`transition-transform duration-200 ${isDateDropdownOpen ? 'rotate-180' : ''}`} />
+              </div>
+              
+              {isDateDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-40 border border-border bg-card text-foreground rounded-xl shadow-lg p-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-200 text-left">
+                  {['All Time', 'Last 24 Hours', 'Last 7 Days', 'Last 30 Days'].map(opt => (
+                    <div
+                      key={opt}
+                      onClick={() => {
+                        setSelectedDateFilter(opt);
+                        setIsDateDropdownOpen(false);
+                      }}
+                      className="px-2.5 py-1.5 text-[11px] font-bold rounded-lg hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                    >
+                      {opt}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* AI Assistant Quick Copilot Button */}
-            <button className="flex items-center space-x-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/15 transition-all px-3.5 py-1.5 text-[11px] font-extrabold text-primary shadow-sm hover:scale-[1.02]">
+            {/* AI Assistant Quick Copilot Button Drawer Toggle */}
+            <button 
+              onClick={() => setIsCopilotDrawerOpen(!isCopilotDrawerOpen)}
+              className="flex items-center space-x-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/15 transition-all px-3.5 py-1.5 text-[11px] font-extrabold text-primary shadow-sm hover:scale-[1.02]"
+            >
               <Sparkles size={13} className="animate-pulse" />
               <span>AI Copilot</span>
             </button>
@@ -488,6 +562,111 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
           </Routes>
         </main>
       </div>
+
+      {/* Premium Search / Command Palette Overlay */}
+      {isSearchModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-start justify-center pt-[15vh]">
+          <div className="bg-card w-full max-w-xl rounded-2xl border border-border shadow-2xl p-4 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center space-x-2 border-b pb-2">
+              <Search className="text-primary shrink-0" size={16} />
+              <input
+                type="text"
+                placeholder="Type a command or search..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                autoFocus
+                className="w-full bg-transparent focus:outline-none text-xs text-foreground font-bold"
+              />
+              <button 
+                onClick={() => setIsSearchModalOpen(false)}
+                className="text-[10px] font-black uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded-md hover:bg-muted/80 shrink-0"
+              >
+                ESC
+              </button>
+            </div>
+            
+            <div className="max-h-60 overflow-y-auto space-y-1">
+              {searchResults.length === 0 ? (
+                <div className="text-center py-6 text-xs text-muted-foreground font-bold">No results found.</div>
+              ) : (
+                searchResults.map((res, i) => (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      navigate(res.url);
+                      setIsSearchModalOpen(false);
+                      setSearchQuery('');
+                    }}
+                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-primary/10 hover:text-primary transition-all cursor-pointer text-left"
+                  >
+                    <span className="text-xs font-extrabold text-foreground">{res.name}</span>
+                    <span className="text-[8px] uppercase tracking-wider font-black px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{res.category}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Copilot Slider Drawer */}
+      {isCopilotDrawerOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex justify-end">
+          <div className="w-full max-w-sm bg-card border-l h-full flex flex-col justify-between p-5 animate-in slide-in-from-right duration-300 shadow-2xl text-left font-sans">
+            {/* Header */}
+            <div className="flex justify-between items-center border-b pb-4">
+              <div className="flex items-center space-x-2 text-foreground font-black text-sm">
+                <Sparkles size={16} className="text-primary animate-pulse" />
+                <span>AI Copilot Helper</span>
+              </div>
+              <button 
+                onClick={() => setIsCopilotDrawerOpen(false)}
+                className="text-[10px] font-black uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded-md hover:bg-muted/80"
+              >
+                Close
+              </button>
+            </div>
+
+            {/* Chat Body */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-4 font-semibold text-xs leading-relaxed">
+              {copilotMessages.map((msg, i) => {
+                const isUser = msg.startsWith('USER: ');
+                const text = isUser ? msg.replace('USER: ', '') : msg.replace('AI: ', '');
+                return (
+                  <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`p-3 rounded-2xl max-w-[85%] ${isUser ? 'bg-primary text-white rounded-tr-none' : 'bg-muted/20 border text-foreground rounded-tl-none'}`}>
+                      {!isUser && i > 0 && (
+                        <span className="flex items-center space-x-1 text-[8px] uppercase tracking-wider text-primary font-black mb-1">
+                          <Sparkles size={9} />
+                          <span>AI Copilot</span>
+                        </span>
+                      )}
+                      <p>{text}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Input Form */}
+            <form onSubmit={handleSendCopilotMessage} className="border-t pt-3 flex items-center space-x-2">
+              <input
+                type="text"
+                placeholder="Ask anything about the CRM..."
+                value={copilotInput}
+                onChange={e => setCopilotInput(e.target.value)}
+                className="flex-1 px-3 py-2 border rounded-full bg-background text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <button
+                type="submit"
+                className="p-2.5 rounded-full bg-primary text-white hover:bg-primary/95 transition-all shadow-md shrink-0"
+              >
+                <Sparkles size={12} />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
