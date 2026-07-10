@@ -37,6 +37,7 @@ import Copilot from './pages/Copilot';
 import SandboxSimulator from './pages/SandboxSimulator';
 import Pipelines from './pages/Pipelines';
 import NotificationsPage from './pages/NotificationsPage';
+import Analytics from './pages/Analytics';
 import api from './services/api';
 import NotificationCenter from './components/NotificationCenter';
 
@@ -473,7 +474,7 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
             <Route path="/pipelines" element={<Pipelines />} />
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/tenants" element={<Tenants />} />
-            <Route path="/analytics" element={<Reports />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/sandbox" element={<SandboxSimulator />} />
             <Route
