@@ -30,6 +30,11 @@ import LeadDetail from './pages/LeadDetail';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import Tenants from './pages/Tenants';
+import Tasks from './pages/Tasks';
+import Reports from './pages/Reports';
+import Conversations from './pages/Conversations';
+import Copilot from './pages/Copilot';
+import SandboxSimulator from './pages/SandboxSimulator';
 import api from './services/api';
 import NotificationCenter from './components/NotificationCenter';
 
@@ -464,19 +469,19 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
             <Route path="/leads" element={<Leads />} />
             <Route path="/leads/:id" element={<LeadDetail />} />
             <Route path="/pipelines" element={<Leads />} />
-            <Route path="/conversations" element={<Leads />} />
+            <Route path="/conversations" element={<Conversations />} />
             <Route path="/tenants" element={<Tenants />} />
-            <Route path="/analytics" element={<Dashboard />} />
-            <Route path="/reports" element={<Dashboard />} />
-            <Route path="/sandbox" element={<Dashboard />} />
+            <Route path="/analytics" element={<Reports />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/sandbox" element={<SandboxSimulator />} />
             <Route
               path="/settings"
               element={<SettingsPage currentUser={currentUser} />}
             />
             <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/tasks" element={<Leads />} />
+            <Route path="/tasks" element={<Tasks />} />
             <Route path="/notifications" element={<SettingsPage currentUser={currentUser} />} />
-            <Route path="/copilot" element={<Dashboard />} />
+            <Route path="/copilot" element={<Copilot />} />
           </Routes>
         </main>
       </div>
