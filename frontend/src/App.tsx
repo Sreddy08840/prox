@@ -35,6 +35,8 @@ import Reports from './pages/Reports';
 import Conversations from './pages/Conversations';
 import Copilot from './pages/Copilot';
 import SandboxSimulator from './pages/SandboxSimulator';
+import Pipelines from './pages/Pipelines';
+import NotificationsPage from './pages/NotificationsPage';
 import api from './services/api';
 import NotificationCenter from './components/NotificationCenter';
 
@@ -468,7 +470,7 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
             <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/leads" element={<Leads />} />
             <Route path="/leads/:id" element={<LeadDetail />} />
-            <Route path="/pipelines" element={<Leads />} />
+            <Route path="/pipelines" element={<Pipelines />} />
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/tenants" element={<Tenants />} />
             <Route path="/analytics" element={<Reports />} />
@@ -480,7 +482,7 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
             />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/tasks" element={<Tasks />} />
-            <Route path="/notifications" element={<SettingsPage currentUser={currentUser} />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/copilot" element={<Copilot />} />
           </Routes>
         </main>
