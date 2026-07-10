@@ -12,7 +12,13 @@ import {
   Search,
   ChevronDown,
   Calendar,
-  ChevronRight
+  ChevronRight,
+  TrendingUp,
+  MessageSquare,
+  FileText,
+  CheckSquare,
+  Bell,
+  Play
 } from 'lucide-react';
 import AcceptInvitation from './pages/AcceptInvitation';
 import OrgProfilePanel from './components/OrgProfilePanel';
@@ -237,15 +243,26 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
     { to: '/', label: t.dashboard, icon: LayoutDashboard },
     { to: '/projects', label: t.projects, icon: Building2 },
     { to: '/leads', label: t.leads, icon: Users },
+    { to: '/pipelines', label: 'Pipelines', icon: Sliders },
+    { to: '/conversations', label: 'Conversations', icon: MessageSquare },
     { to: '/tenants', label: t.tenants, icon: Users },
+    { to: '/analytics', label: 'Analytics', icon: TrendingUp },
+    { to: '/reports', label: 'Reports', icon: FileText },
+    { to: '/sandbox', label: t.sandbox, icon: Play },
     { to: '/settings', label: t.settings, icon: Settings },
+  ];
+
+  const quickAccessItems = [
+    { to: '/tasks', label: 'My Tasks', icon: CheckSquare, badge: 8 },
+    { to: '/notifications', label: 'Notifications', icon: Bell, badge: 12 },
+    { to: '/copilot', label: 'AI Copilot', icon: Sparkles, glow: true },
   ];
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground transition-colors duration-300">
       {/* Floating Modern Sidebar */}
       <aside className={`border-r border-[#1F2937]/50 bg-[#111827] text-[#CBD5E1] flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out relative z-30 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
-        <div className="p-4 flex flex-col space-y-6">
+        <div className="p-4 flex flex-col space-y-5 overflow-y-auto max-h-[85vh] scrollbar-none">
           {/* Workspace Selector Mockup */}
           <div className="flex items-center justify-between">
             {!isSidebarCollapsed ? (
@@ -287,13 +304,13 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
                     active
                       ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
                       : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
                   }`}
                 >
-                  <Icon size={16} className={`shrink-0 ${active ? 'text-white' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
+                  <Icon size={15} className={`shrink-0 ${active ? 'text-white' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
                   {!isSidebarCollapsed && <span className="tracking-tight">{item.label}</span>}
                   
                   {active && !isSidebarCollapsed && (
@@ -306,19 +323,53 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
             {currentUser.role === 'ADMIN' && (
               <Link
                 to="/admin"
-                className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                className={`flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
                   isActive('/admin')
                     ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
                     : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
                 }`}
               >
-                <Sliders size={16} className={`shrink-0 ${isActive('/admin') ? 'text-white' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
+                <Sliders size={15} className={`shrink-0 ${isActive('/admin') ? 'text-white' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
                 {!isSidebarCollapsed && <span className="tracking-tight">{t.adminPanel}</span>}
                 {isActive('/admin') && !isSidebarCollapsed && (
                   <span className="absolute right-3 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                 )}
               </Link>
             )}
+          </nav>
+
+          {/* QUICK ACCESS Section */}
+          {!isSidebarCollapsed && (
+            <div className="pt-3 px-3 text-[9px] font-black text-[#94A3B8]/60 uppercase tracking-widest text-left select-none">
+              Quick Access
+            </div>
+          )}
+          <nav className="space-y-1">
+            {quickAccessItems.map((item) => {
+              const active = isActive(item.to);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
+                    active
+                      ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
+                      : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3 text-left">
+                    <Icon size={15} className={`shrink-0 ${active ? 'text-white' : item.glow ? 'text-primary animate-pulse' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
+                    {!isSidebarCollapsed && <span className="tracking-tight">{item.label}</span>}
+                  </div>
+                  {!isSidebarCollapsed && item.badge && (
+                    <span className="bg-primary/20 text-[#6D5EF5] border border-primary/20 text-[9px] font-black px-1.5 py-0.5 rounded-md">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
@@ -412,12 +463,20 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
             <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/leads" element={<Leads />} />
             <Route path="/leads/:id" element={<LeadDetail />} />
+            <Route path="/pipelines" element={<Leads />} />
+            <Route path="/conversations" element={<Leads />} />
             <Route path="/tenants" element={<Tenants />} />
+            <Route path="/analytics" element={<Dashboard />} />
+            <Route path="/reports" element={<Dashboard />} />
+            <Route path="/sandbox" element={<Dashboard />} />
             <Route
               path="/settings"
               element={<SettingsPage currentUser={currentUser} />}
             />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/tasks" element={<Leads />} />
+            <Route path="/notifications" element={<SettingsPage currentUser={currentUser} />} />
+            <Route path="/copilot" element={<Dashboard />} />
           </Routes>
         </main>
       </div>

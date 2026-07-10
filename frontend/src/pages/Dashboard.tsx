@@ -17,6 +17,8 @@ import {
   ChevronRight,
   Activity,
   FileText,
+  Building2,
+  HelpCircle,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -29,8 +31,6 @@ import {
   BarChart,
   Bar,
   Cell,
-  PieChart,
-  Pie,
 } from 'recharts';
 
 interface KPIStats {
@@ -147,10 +147,9 @@ export default function Dashboard() {
     );
   }
 
-  const { kpis, leadTrend, leadFunnel, leadSources, demandHeatmap, recentActivities, alerts } = data;
+  const { kpis, leadTrend, leadFunnel, recentActivities, alerts } = data;
 
   // Chart Color Palettes
-  const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#f43f5e', '#6366f1'];
   const FUNNEL_COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#a78bfa', '#10b981', '#ef4444'];
 
   const getActivityIcon = (typeStr: string) => {
@@ -372,10 +371,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Main Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Main Charts & Insights Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lead Trend AreaChart */}
-        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4 hover:shadow-md transition-all duration-300">
+        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4 hover:shadow-md transition-all duration-300 lg:col-span-2">
           <div>
             <h3 className="text-sm font-bold text-foreground">Leads Generation Trend</h3>
             <p className="text-[10px] text-muted-foreground mt-0.5">Daily customer inquiries volume over the last 30 days.</p>
@@ -402,8 +401,83 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* AI Insights Card */}
+        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4 flex flex-col justify-between hover:shadow-md transition-all duration-300 lg:col-span-1">
+          <div>
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-black text-foreground flex items-center space-x-2">
+                <Sparkles size={16} className="text-primary animate-pulse" />
+                <span>AI Insights</span>
+              </h3>
+              <span className="text-[10px] text-primary font-bold hover:underline cursor-pointer">View all</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">Real-time pipeline analysis logs.</p>
+          </div>
+
+          <div className="space-y-2.5 my-1">
+            {/* Item 1 */}
+            <div className="flex items-start justify-between p-2.5 rounded-xl border bg-muted/5 hover:bg-muted/10 transition-all cursor-pointer group">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 shrink-0">
+                  <Users size={14} />
+                </div>
+                <div className="text-left">
+                  <span className="font-extrabold text-[11px] text-foreground block leading-tight">AI detected 12 high-intent buyers</span>
+                  <span className="text-[9px] text-muted-foreground font-semibold">Ready for immediate follow-up.</span>
+                </div>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* Item 2 */}
+            <div className="flex items-start justify-between p-2.5 rounded-xl border bg-muted/5 hover:bg-muted/10 transition-all cursor-pointer group">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                  <TrendingUp size={14} />
+                </div>
+                <div className="text-left">
+                  <span className="font-extrabold text-[11px] text-foreground block leading-tight">Response time improved</span>
+                  <span className="text-[9px] text-muted-foreground font-semibold">24% faster than yesterday.</span>
+                </div>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* Item 3 */}
+            <div className="flex items-start justify-between p-2.5 rounded-xl border bg-muted/5 hover:bg-muted/10 transition-all cursor-pointer group">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500 shrink-0">
+                  <Building2 size={14} />
+                </div>
+                <div className="text-left">
+                  <span className="font-extrabold text-[11px] text-foreground block leading-tight">Luxury apartments demand</span>
+                  <span className="text-[9px] text-muted-foreground font-semibold">is rising in Project Skyline.</span>
+                </div>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* Item 4 */}
+            <div className="flex items-start justify-between p-2.5 rounded-xl border bg-muted/5 hover:bg-muted/10 transition-all cursor-pointer group">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500 shrink-0">
+                  <Sparkles size={14} />
+                </div>
+                <div className="text-left">
+                  <span className="font-extrabold text-[11px] text-foreground block leading-tight">Project Green Valley metrics</span>
+                  <span className="text-[9px] text-muted-foreground font-semibold">may require price corrections (-3% to -5%).</span>
+                </div>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 3: Sales Funnel & Pipeline Health Score */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lead Funnel BarChart */}
-        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4 hover:shadow-md transition-all duration-300">
+        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4 hover:shadow-md transition-all duration-300 lg:col-span-2">
           <div>
             <h3 className="text-sm font-bold text-foreground">Sales Funnel Conversion</h3>
             <p className="text-[10px] text-muted-foreground mt-0.5">Volume of leads currently in each pipeline phase.</p>
@@ -427,66 +501,45 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
 
-      {/* Row 2: Sources and Heatmap */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* PieChart: Lead Sources */}
-        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4 lg:col-span-1 flex flex-col justify-between">
+        {/* Pipeline Health Score Card */}
+        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4 flex flex-col justify-between hover:shadow-md transition-all duration-300 lg:col-span-1">
           <div>
-            <h3 className="text-sm font-bold text-foreground">Acquisition Channels</h3>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Inquiry sources distribution details.</p>
-          </div>
-          <div className="h-56 relative flex items-center justify-center text-xs mt-3">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={leadSources}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={4}
-                  dataKey="count"
-                  nameKey="source"
-                >
-                  {leadSources.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ borderRadius: '8px' }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          {/* Custom Legends list */}
-          <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center pt-2 text-[10px] font-semibold text-muted-foreground">
-            {leadSources.map((item, idx) => (
-              <div key={idx} className="flex items-center space-x-1.5">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
-                <span>
-                  {item.source} ({item.count})
-                </span>
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-bold text-foreground">Pipeline Health Score</h3>
+              <div className="p-1 rounded bg-muted text-muted-foreground">
+                <HelpCircle size={14} />
               </div>
-            ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-0.5 font-semibold">Automated deal scoring health meter.</p>
           </div>
-        </div>
 
-        {/* Heatmap/BarChart: Demand Heatmap */}
-        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4 lg:col-span-2">
-          <div>
-            <h3 className="text-sm font-bold text-foreground">Pricing & Budget Heatmap</h3>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Budget segment inquiries representing customer affordability brackets.</p>
-          </div>
-          <div className="h-64 text-xs">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart layout="vertical" data={demandHeatmap} margin={{ top: 10, right: 10, left: 20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                <XAxis type="number" stroke="#94a3b8" tickLine={false} axisLine={false} />
-                <YAxis dataKey="name" type="category" stroke="#94a3b8" tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ borderRadius: '8px' }} />
-                <Bar dataKey="count" fill="#10b981" radius={[0, 6, 6, 0]} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 my-4">
+            {/* SVG Donut gauge */}
+            <div className="relative w-28 h-28 flex items-center justify-center shrink-0">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                {/* Background circle */}
+                <circle cx="50" cy="50" r="40" stroke="var(--muted)" strokeWidth="8" fill="transparent" />
+                {/* Progress circle */}
+                <circle cx="50" cy="50" r="40" stroke="#10b981" strokeWidth="8" fill="transparent"
+                  strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * 68) / 100}
+                  strokeLinecap="round" className="transition-all duration-1000 ease-out" />
+              </svg>
+              <div className="absolute flex flex-col items-center justify-center">
+                <span className="text-2xl font-black text-foreground">68</span>
+                <span className="text-[9px] uppercase font-extrabold text-emerald-500">Good</span>
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-2 text-left">
+              <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
+                Your pipeline is <span className="text-emerald-500 font-bold">healthy</span>! Keep up the good work and follow up on hot stage qualification leads.
+              </p>
+              <span className="text-[10px] text-primary font-bold hover:underline cursor-pointer flex items-center space-x-1">
+                <span>View full analysis</span>
+                <ChevronRight size={10} />
+              </span>
+            </div>
           </div>
         </div>
       </div>
