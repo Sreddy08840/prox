@@ -19,6 +19,7 @@ import {
   FileText,
   Building2,
   HelpCircle,
+  X,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -90,6 +91,11 @@ export default function Dashboard() {
   const [exporting, setExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+
+  // Analysis modal state
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
+  const openAnalysis = () => setIsAnalysisOpen(true);
+  const closeAnalysis = () => setIsAnalysisOpen(false);
 
   const handleExportReport = async () => {
     setExporting(true);
@@ -189,6 +195,8 @@ export default function Dashboard() {
   };
 
   const health = calculatePipelineHealth();
+
+
 
   // Chart Color Palettes
   const FUNNEL_COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#a78bfa', '#10b981', '#ef4444'];
@@ -576,7 +584,27 @@ export default function Dashboard() {
               <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
                 {health.description}
               </p>
-              <span className="text-[10px] text-primary font-bold hover:underline cursor-pointer flex items-center space-x-1">
+              {/* Analysis Modal */}
+              {isAnalysisOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                  <div className="bg-card rounded-xl p-6 w-full max-w-md shadow-lg animate-in fade-in">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-lg font-bold text-foreground">Pipeline Health Analysis</h3>
+                      <button onClick={closeAnalysis} className="text-muted-foreground hover:text-foreground">
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <p className="text-sm text-foreground mb-2">
+                      Score: <span className="font-bold" style={{ color: health.color }}>{health.score}%</span> ({health.status})
+                    </p>
+                    <p className="text-sm text-foreground">{health.description}</p>
+                    <div className="mt-4 text-xs text-muted-foreground">
+                      Detailed metrics and suggestions will appear here in future releases.
+                    </div>
+                  </div>
+                </div>
+              )}
+              <span onClick={openAnalysis} className="text-[10px] text-primary font-bold hover:underline cursor-pointer flex items-center space-x-1">
                 <span>View full analysis</span>
                 <ChevronRight size={10} />
               </span>
