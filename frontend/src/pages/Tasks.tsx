@@ -88,7 +88,7 @@ export default function Tasks() {
                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Priority</label>
                 <select
                   value={newTaskPriority}
-                  onChange={e => setNewTaskPriority(e.target.value as any)}
+                  onChange={e => setNewTaskPriority(e.target.value as 'HIGH' | 'MEDIUM' | 'LOW')}
                   className="w-full border rounded-xl px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary font-bold"
                 >
                   <option value="HIGH">High</option>

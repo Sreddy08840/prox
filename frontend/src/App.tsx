@@ -230,7 +230,7 @@ const translations = {
 };
 
 interface MainLayoutProps {
-  t: any;
+  t: Record<string, string>;
   currentUser: { id: string; role: string };
 }
 
