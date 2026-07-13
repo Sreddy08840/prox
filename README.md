@@ -112,7 +112,7 @@ prox/
 - **Framework**: React 18 with Vite and TypeScript
 - **Styling**: Tailwind CSS, Vanilla CSS custom gradients, and Lucide React Icons
 - **Queries & Routing**: TanStack React Query, React Router DOM v6
-- **Data Visualization**: Recharts for dashboard analytics
+
 
 ---
 
