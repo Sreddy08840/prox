@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { 
   LayoutDashboard, 
   Users, 
@@ -7,7 +7,6 @@ import {
   LogIn, 
   Sparkles, 
   Building2, 
-  AlertCircle, 
   Sliders, 
   Search,
   ChevronDown,
@@ -20,146 +19,36 @@ import {
   Bell,
   Play
 } from 'lucide-react';
-import AcceptInvitation from './pages/AcceptInvitation';
 import OrgProfilePanel from './components/OrgProfilePanel';
 import TeamManagementPanel from './components/TeamManagementPanel';
-import Projects from './pages/Projects';
-import ProjectDetail from './pages/ProjectDetail';
-import Leads from './pages/Leads';
-import LeadDetail from './pages/LeadDetail';
-import Dashboard from './pages/Dashboard';
-import AdminPanel from './pages/AdminPanel';
-import Tenants from './pages/Tenants';
-import Tasks from './pages/Tasks';
-import Reports from './pages/Reports';
-import Conversations from './pages/Conversations';
-import Copilot from './pages/Copilot';
-import SandboxSimulator from './pages/SandboxSimulator';
-import Pipelines from './pages/Pipelines';
-import NotificationsPage from './pages/NotificationsPage';
-import Analytics from './pages/Analytics';
-import api from './services/api';
 import NotificationCenter from './components/NotificationCenter';
 
-// Login Preview Component
+// Lazy-load page components to reduce initial JS payload and optimize LCP/TBT scores
+const AcceptInvitation = lazy(() => import('./pages/AcceptInvitation'));
+const Projects = lazy(() => import('./pages/Projects'));
+const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
+const Leads = lazy(() => import('./pages/Leads'));
+const LeadDetail = lazy(() => import('./pages/LeadDetail'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const Tenants = lazy(() => import('./pages/Tenants'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const Reports = lazy(() => import('./pages/Reports'));
+const Conversations = lazy(() => import('./pages/Conversations'));
+const Copilot = lazy(() => import('./pages/Copilot'));
+const SandboxSimulator = lazy(() => import('./pages/SandboxSimulator'));
+const Pipelines = lazy(() => import('./pages/Pipelines'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const Landing = lazy(() => import('./pages/Landing'));
+const Product = lazy(() => import('./pages/Product'));
+const Solutions = lazy(() => import('./pages/Solutions'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const Resources = lazy(() => import('./pages/Resources'));
+const Company = lazy(() => import('./pages/Company'));
+const BookDemo = lazy(() => import('./pages/BookDemo'));
 
-interface AxiosErrorLike {
-  response?: {
-    status?: number;
-    data?: {
-      error?: {
-        message?: string;
-      };
-    };
-  };
-}
 
-const LoginPreview = () => {
-  const [email, setEmail] = useState('admin@propx.com');
-  const [password, setPassword] = useState('adminpassword');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      let token = '';
-      try {
-        const res = await api.post('/auth/login', { email, password });
-        if (res.data.success) {
-          token = res.data.data.accessToken;
-        }
-      } catch (err) {
-        const axiosError = err as AxiosErrorLike;
-        if (axiosError.response?.status === 401 || axiosError.response?.status === 404) {
-          // Attempt self-registration if credentials are correct but user does not exist
-          const regRes = await api.post('/auth/register', {
-            organizationName: 'Default Organization',
-            organizationSlug: `default-org-${Math.floor(Math.random() * 1000)}`,
-            email,
-            password,
-            firstName: 'Admin',
-            lastName: 'User',
-          });
-          if (regRes.data.success) {
-            token = regRes.data.data.accessToken;
-          }
-        } else {
-          throw err;
-        }
-      }
-
-      if (token) {
-        localStorage.setItem('propx_auth_token', token);
-        window.location.href = '/';
-      } else {
-        setError('Authentication failed');
-      }
-    } catch (err) {
-      const axiosError = err as AxiosErrorLike;
-      setError(axiosError.response?.data?.error?.message || 'Login failed. Please check credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 gradient-bg">
-      <div className="max-w-md w-full space-y-8 bg-card border rounded-2xl p-8 shadow-lg">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold tracking-tight">PropX Platform</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Sign in to your administration panel</p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-lg bg-destructive/15 p-3 text-destructive flex items-start space-x-2 text-xs">
-              <AlertCircle className="shrink-0 mt-0.5" size={15} />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="rounded-md space-y-4">
-            <div>
-              <label className="text-sm font-medium block mb-1">Email Address</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                placeholder="name@propx.com"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium block mb-1">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-semibold rounded-lg text-primary-foreground bg-primary hover:bg-primary/95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Authenticating...' : 'Sign In'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
 
 const SettingsPage = ({ currentUser }: { currentUser: { id: string; role: string } }) => {
   const [activeTab, setActiveTab] = useState<'profile' | 'team'>('profile');
@@ -671,32 +560,58 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
   );
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
   const [currentUser] = useState({ id: 'mock-user-123', role: 'ADMIN' });
   const lang = 'EN';
   const t = translations[lang];
 
   const token = localStorage.getItem('propx_auth_token');
-  if (!token && window.location.pathname !== '/login' && !window.location.pathname.startsWith('/accept-invitation')) {
+  const publicPaths = ['/login', '/product', '/solutions', '/pricing', '/resources', '/company', '/book-demo'];
+  const isPublicPath = publicPaths.includes(window.location.pathname) || window.location.pathname.startsWith('/accept-invitation');
+  
+  if (!token && !isPublicPath) {
     window.location.href = '/login';
     return null;
   }
 
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={<LoginPreview />} />
-        <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
-        <Route
-          path="/*"
-          element={
-            <MainLayout
-              t={t}
-              currentUser={currentUser}
-            />
-          }
-        />
-      </Routes>
+      <ScrollToTop />
+      <Suspense fallback={
+        <div className="min-h-screen bg-[#050B1F] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+        </div>
+      }>
+        <Routes>
+          <Route path="/login" element={<Landing />} />
+          <Route path="/product" element={<Product />} />
+          <Route path="/solutions" element={<Solutions />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/resources" element={<Resources />} />
+          <Route path="/company" element={<Company />} />
+          <Route path="/book-demo" element={<BookDemo />} />
+          <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
+          <Route
+            path="/*"
+            element={
+              <MainLayout
+                t={t}
+                currentUser={currentUser}
+              />
+            }
+          />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
