@@ -14,13 +14,13 @@ export const Background3D: React.FC<Background3DProps> = ({ isLoggingIn }) => {
         style={{
           backgroundImage: 'url("/luxury_skyline.png")',
           transform: 'translate3d(var(--bg-x, 0px), var(--bg-y, 0px), 0px) scale(var(--bg-scale, 1.02))',
-          ['--bg-scale' as any]: isLoggingIn ? 1.08 : 1.02,
           willChange: 'transform',
           transition: 'transform 0.85s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.85s',
           // Avoid LCP-delaying filter animations. Animate opacity instead.
           opacity: isLoggingIn ? 0.25 : 0.45,
           contain: 'layout paint',
-        }}
+          '--bg-scale': isLoggingIn ? 1.08 : 1.02,
+        } as React.CSSProperties}
       />
 
       {/* Dark Luxury Navy Overlay (#050B1F) */}

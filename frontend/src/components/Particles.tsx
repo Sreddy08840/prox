@@ -68,10 +68,10 @@ export const Particles: React.FC<ParticlesProps> = ({ isLoggingIn: _isLoggingIn 
               width: p.size,
               height: p.size,
               // Pass custom variables to keyframe
-              ['--duration' as any]: `${p.duration}s`,
-              ['--delay' as any]: `${p.delay}s`,
-              ['--drift-x' as any]: driftX,
-            }}
+              '--duration': `${p.duration}s`,
+              '--delay': `${p.delay}s`,
+              '--drift-x': driftX,
+            } as React.CSSProperties}
           />
         );
       })}
