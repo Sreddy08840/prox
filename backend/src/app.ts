@@ -66,6 +66,20 @@ app.use(express.urlencoded({ extended: true }));
 // Structured logger middleware
 app.use(requestLogger);
 
+// Friendly root endpoint
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).json({
+    name: 'PropX API Gateway',
+    version: '1.0.0',
+    status: 'operational',
+    endpoints: {
+      liveness: '/api/v1/liveness',
+      health: '/api/v1/health',
+      metrics: '/api/v1/metrics',
+    },
+  });
+});
+
 // Health Check Route
 app.use('/api/v1', healthRouter);
 
