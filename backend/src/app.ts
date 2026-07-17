@@ -49,7 +49,20 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      // In development or when origin is missing (same-origin, curl, local tools), allow
+      if (!origin || process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+        return;
+      }
+
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        allowedOrigins.includes('*') ||
+        origin.endsWith('.onrender.com') ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1');
+
+      if (isAllowed) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
