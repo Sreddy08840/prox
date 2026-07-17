@@ -8,6 +8,7 @@ import {
   MessageSquare, Sliders, Globe, Calendar, Clock, Loader2, Play
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import api from '../services/api';
 import AnimatedBackground from '../components/AnimatedBackground';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -40,6 +41,7 @@ type FormData = z.infer<typeof schema>;
 export const BookDemo: React.FC = () => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
@@ -60,15 +62,17 @@ export const BookDemo: React.FC = () => {
     }
   });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     setLoading(true);
-    // eslint-disable-next-line no-console
-    console.info('Consultation request data:', data);
-    // Simulate API request
-    setTimeout(() => {
-      setLoading(false);
+    setError(null);
+    try {
+      await api.post('/auth/book-demo', data);
       setFormSubmitted(true);
-    }, 1500);
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      setError(err.response?.data?.error?.message || 'Failed to schedule demo request. Please verify inputs.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const testimonialItems = [
@@ -206,6 +210,11 @@ export const BookDemo: React.FC = () => {
               </p>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-left">
+                {error && (
+                  <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-rose-400 text-xs font-semibold">
+                    {error}
+                  </div>
+                )}
                 {/* 2-column fields row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>

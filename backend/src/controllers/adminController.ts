@@ -510,3 +510,25 @@ export const retryFailedMessage = async (
     next(error);
   }
 };
+
+export const getDemoRequests = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    verifyAdminAccess(req);
+
+    const demoRequests = await prisma.demoRequest.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: demoRequests,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

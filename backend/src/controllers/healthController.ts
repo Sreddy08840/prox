@@ -32,3 +32,19 @@ export const getHealth = async (req: Request, res: Response): Promise<void> => {
   const statusCode = healthStatus.status === 'healthy' ? 200 : 503;
   res.status(statusCode).json(healthStatus);
 };
+
+export const getLiveness = (_req: Request, res: Response): void => {
+  res.status(200).json({
+    status: 'alive',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+};
+
+import metrics from '../utils/metrics';
+
+export const getMetrics = (_req: Request, res: Response): void => {
+  res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+  res.status(200).send(metrics.getPrometheusFormat());
+};
+

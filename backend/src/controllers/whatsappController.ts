@@ -53,6 +53,24 @@ export const verifyWebhook = async (req: Request, res: Response, next: NextFunct
   }
 };
 
+class WebhookDeduplicator {
+  private static processedIds = new Set<string>();
+
+  public static isDuplicate(messageId: string): boolean {
+    if (this.processedIds.has(messageId)) {
+      return true;
+    }
+    this.processedIds.add(messageId);
+    if (this.processedIds.size > 1000) {
+      const firstKey = this.processedIds.values().next().value;
+      if (firstKey !== undefined) {
+        this.processedIds.delete(firstKey);
+      }
+    }
+    return false;
+  }
+}
+
 /**
  * Handle incoming WhatsApp Webhook messages (POST request from Meta)
  */
@@ -66,6 +84,15 @@ export const handleWebhook = async (req: Request, res: Response, next: NextFunct
 
       if (value.messages && value.messages.length > 0) {
         const msg = value.messages[0];
+        const messageId = msg.id;
+
+        // Webhook message deduplication check
+        if (messageId && WebhookDeduplicator.isDuplicate(messageId)) {
+          logger.info(`[WhatsApp Webhook] Duplicate message ID ${messageId} ignored.`);
+          res.status(200).json({ success: true, message: 'Duplicate ignored' });
+          return;
+        }
+
         const from = msg.from; // Sender phone number
         const content = msg.text?.body;
         const contactName = value.contacts?.[0]?.profile?.name || 'WhatsApp Contact';

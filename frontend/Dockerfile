@@ -17,4 +17,4 @@ COPY nginx.conf.template /etc/nginx/nginx.conf.template
 
 EXPOSE 80
 
-CMD ["sh", "-c", "if ! echo \"$BACKEND_HOST\" | grep -q \"\\.onrender\\.com$\"; then export BACKEND_HOST=\"${BACKEND_HOST}.onrender.com\"; fi && envsubst '${BACKEND_HOST} ${PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "if [ -n \"$RENDER\" ] && ! echo \"$BACKEND_HOST\" | grep -q \"\\.onrender\\.com$\"; then export BACKEND_HOST=\"${BACKEND_HOST}.onrender.com\"; fi && envsubst '${BACKEND_HOST} ${PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

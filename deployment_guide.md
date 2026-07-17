@@ -113,3 +113,58 @@ Before opening the platform to users, confirm that you have completed these secu
 - [ ] **Health Endpoint Monitoring**: Hook up Route 53 Health Checks or CloudWatch alerts to ping `/api/v1/health` every 30 seconds.
 - [ ] **Log Storage**: Configure Docker container console logs to aggregate into **AWS CloudWatch logs** or an ELK stack.
 - [ ] **Automatic Backups**: Configure RDS database backups with a minimum retention period of 7 days, enabling automated snapshots.
+
+---
+
+## 4. Observability & Prometheus Telemetry
+
+PropX exposes standard telemetry metrics at the `/api/v1/metrics` route formatted for Prometheus scraping:
+* **Endpoint**: `GET http://<backend_host>/api/v1/metrics`
+* **Response**: `text/plain; version=0.0.4`
+
+### Prometheus Scraping Configuration
+Add the following job configuration to your production `prometheus.yml`:
+```yaml
+scrape_configs:
+  - job_name: 'propx-backend'
+    scrape_interval: 15s
+    metrics_path: '/api/v1/metrics'
+    static_configs:
+      - targets: ['backend:5000']
+```
+
+---
+
+## 5. CI/CD & Deployment Workflows
+
+We use **GitHub Actions** for the build and test CI pipeline. The workflow configuration is located in [.github/workflows/ci.yml](file:///.github/workflows/ci.yml).
+
+### Rolling Deployments & Rollbacks (AWS Fargate)
+* **Strategy**: Use **Blue/Green** or **Rolling Update** deployment models.
+* **Rolling Updates**: Set the ECS service's minimum healthy percent to `100%` and maximum percent to `200%`. AWS Fargate will spin up new containers, execute container healthchecks against `/api/v1/health` and `/api/v1/liveness`, and then swap traffic on the load balancer without downtime.
+* **Rollbacks**: If target metrics (HTTP 5xx rate > 1%) trigger alarms during deployment, roll back by modifying the ECS Task Definition to reference the previous Docker image tag.
+
+---
+
+## 6. Database Backup, Restore, and Disaster Recovery
+
+### Automated Backups (RDS)
+* Enable RDS Automated Backups with a 14-day retention.
+* Enable Point-in-Time Recovery (PITR) to restore your database to any state within the retention period down to the second.
+
+### Manual Database Backups (pg_dump)
+To perform a manual backup of your PostgreSQL database (e.g. before major schema migrations):
+```bash
+# Backup database schema and data into a compressed archive
+pg_dump -h [db_host] -U postgres -F c -b -v -f propx_backup_$(date +%F).dump propx_db
+```
+
+### Database Restore (pg_restore)
+In the event of database corruption or a disaster recovery scenario:
+```bash
+# Terminate existing active connections to prevent file locks
+psql -h [db_host] -U postgres -d propx_db -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'propx_db' AND pid <> pg_backend_pid();"
+
+# Restore database from the dump archive
+pg_restore -h [db_host] -U postgres -d propx_db -v propx_backup_XXXX.dump
+```

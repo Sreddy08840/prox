@@ -65,6 +65,9 @@ services:
       dockerfile: Dockerfile
     container_name: propx-frontend
     restart: always
+    environment:
+      - PORT=80
+      - BACKEND_HOST=backend:5000
     ports:
       - "80:80"
     depends_on:

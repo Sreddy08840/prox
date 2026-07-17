@@ -9,6 +9,7 @@ import logger from '../../utils/logger';
 import { crmSyncService } from '../crmSyncService';
 import { routeLeadToAgent } from '../../utils/leadRouter';
 import { sendEmail } from '../mailService';
+import metrics from '../../utils/metrics';
 
 class AIService {
   private provider: AIProvider;
@@ -35,10 +36,39 @@ class AIService {
     logger.info(`[AI Service] Initialized with provider: ${this.provider.constructor.name}`);
   }
 
+  private async executeWithTimeout<T>(fn: () => Promise<T>, timeoutMs = 15000): Promise<T> {
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('AI Request Timeout exceeded')), timeoutMs)
+    );
+    return Promise.race([fn(), timeoutPromise]);
+  }
+
+  private async executeWithRetry<T>(fn: () => Promise<T>, task: string, retries = 2): Promise<T> {
+    let attempt = 0;
+    while (attempt <= retries) {
+      try {
+        const start = Date.now();
+        const res = await fn();
+        const duration = Date.now() - start;
+        metrics.recordAiLatency(task, duration);
+        return res;
+      } catch (err) {
+        attempt++;
+        if (attempt > retries) throw err;
+        logger.warn(`[AI Service] Attempt ${attempt} failed for task "${task}". Retrying... Error: ${err instanceof Error ? err.message : String(err)}`);
+        await new Promise(res => setTimeout(res, 1000 * attempt)); // exponential backoff
+      }
+    }
+    throw new Error('AI execution exceeded maximum retry limit.');
+  }
+
   async analyzeLeadConversations(transcript: string): Promise<AIAnalysisResult> {
     try {
       const template = await fs.promises.readFile(this.promptPath, 'utf8');
-      return await this.provider.analyzeConversation(transcript, template);
+      return await this.executeWithRetry(
+        () => this.executeWithTimeout(() => this.provider.analyzeConversation(transcript, template)),
+        'analyze_lead'
+      );
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : 'Unknown error';
       throw new Error(`AI Service analysis failed: ${errMsg}`);
@@ -48,7 +78,10 @@ class AIService {
   async summarizeConversation(transcript: string): Promise<string> {
     try {
       const template = await fs.promises.readFile(this.summaryPromptPath, 'utf8');
-      return await this.provider.summarizeConversation(transcript, template);
+      return await this.executeWithRetry(
+        () => this.executeWithTimeout(() => this.provider.summarizeConversation(transcript, template)),
+        'summarize_conversation'
+      );
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : 'Unknown error';
       throw new Error(`AI Service summarization failed: ${errMsg}`);
@@ -237,7 +270,10 @@ class AIService {
     const systemPrompt = promptTemplate.replace('{transcript}', transcriptText);
 
     // Call provider
-    const response = await this.provider.generateDraft(transcriptText, systemPrompt);
+    const response = await this.executeWithRetry(
+      () => this.executeWithTimeout(() => this.provider.generateDraft(transcriptText, systemPrompt)),
+      'negotiation_draft'
+    );
     return response.trim();
   }
 }

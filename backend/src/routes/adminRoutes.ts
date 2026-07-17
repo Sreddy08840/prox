@@ -18,6 +18,7 @@ import {
   getAuditLogs,
   getFailedMessages,
   retryFailedMessage,
+  getDemoRequests,
 } from '../controllers/adminController';
 
 const router = Router();
@@ -52,5 +53,8 @@ router.get('/audit-logs', protect, getAuditLogs);
 // Failed dispatches / delivery log queue
 router.get('/failed-messages', protect, getFailedMessages);
 router.post('/failed-messages/:id/retry', protect, retryFailedMessage);
+
+// Demo requests list
+router.get('/demo-requests', protect, getDemoRequests);
 
 export default router;

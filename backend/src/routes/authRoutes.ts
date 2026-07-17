@@ -9,6 +9,7 @@ import {
   forgotPassword,
   resetPassword,
   acceptInvitation,
+  bookDemo,
 } from '../controllers/authController';
 
 const router = Router();
@@ -78,6 +79,22 @@ const acceptInvitationSchema = z.object({
   }),
 });
 
+const bookDemoSchema = z.object({
+  body: z.object({
+    fullName: z.string({ required_error: 'Full name is required' }).min(1, 'Full name cannot be empty'),
+    companyName: z.string({ required_error: 'Company name is required' }).min(1, 'Company name cannot be empty'),
+    email: z.string({ required_error: 'Email is required' }).email('Invalid email address format'),
+    phone: z.string({ required_error: 'Phone number is required' }).min(1, 'Phone number cannot be empty'),
+    country: z.string({ required_error: 'Country is required' }).min(1, 'Country cannot be empty'),
+    orgSize: z.string({ required_error: 'Organization size is required' }).min(1, 'Organization size cannot be empty'),
+    role: z.string({ required_error: 'Role is required' }).min(1, 'Role cannot be empty'),
+    projects: z.string({ required_error: 'Projects count is required' }).min(1, 'Projects count cannot be empty'),
+    preferredDate: z.string({ required_error: 'Preferred date is required' }).min(1, 'Preferred date cannot be empty'),
+    preferredTime: z.string({ required_error: 'Preferred time is required' }).min(1, 'Preferred time cannot be empty'),
+    message: z.string().optional().nullable(),
+  }),
+});
+
 // ==========================================
 // ROUTES DEFINITIONS
 // ==========================================
@@ -89,5 +106,7 @@ router.post('/logout', logout);
 router.post('/forgot-password', validate(forgotPasswordSchema), forgotPassword);
 router.post('/reset-password/:token', validate(resetPasswordSchema), resetPassword);
 router.post('/accept-invitation/:token', validate(acceptInvitationSchema), acceptInvitation);
+router.post('/book-demo', validate(bookDemoSchema), bookDemo);
 
 export default router;
+

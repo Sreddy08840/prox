@@ -84,15 +84,31 @@ export const getUnitTypes = async (
       },
     });
 
+    // Run a single grouped query to count units by unitTypeId and status
+    const unitCounts = await prisma.unit.groupBy({
+      by: ['unitTypeId', 'status'],
+      where: {
+        projectId,
+        deletedAt: null,
+      },
+      _count: true,
+    });
+
+    // Build lookup maps for total units and available units per layout
+    const totalCountMap: Record<string, number> = {};
+    const availableCountMap: Record<string, number> = {};
+
+    unitCounts.forEach((c) => {
+      totalCountMap[c.unitTypeId] = (totalCountMap[c.unitTypeId] || 0) + c._count;
+      if (c.status === 'AVAILABLE') {
+        availableCountMap[c.unitTypeId] = c._count;
+      }
+    });
+
     const enrichedUnitTypes = await Promise.all(
       unitTypes.map(async (type) => {
-        const totalCount = await prisma.unit.count({
-          where: { unitTypeId: type.id, deletedAt: null },
-        });
-
-        const availableCount = await prisma.unit.count({
-          where: { unitTypeId: type.id, status: 'AVAILABLE', deletedAt: null },
-        });
+        const totalCount = totalCountMap[type.id] || 0;
+        const availableCount = availableCountMap[type.id] || 0;
 
         // Count interested qualified leads
         const interestedLeadsCount = await prisma.lead.count({

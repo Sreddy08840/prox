@@ -442,3 +442,45 @@ export const acceptInvitation = async (req: Request, res: Response, next: NextFu
     next(error);
   }
 };
+
+export const bookDemo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const {
+      fullName,
+      companyName,
+      email,
+      phone,
+      country,
+      orgSize,
+      role,
+      projects,
+      preferredDate,
+      preferredTime,
+      message,
+    } = req.body;
+
+    const demoRequest = await prisma.demoRequest.create({
+      data: {
+        fullName,
+        companyName,
+        email,
+        phone,
+        country,
+        orgSize,
+        role,
+        projects,
+        preferredDate: new Date(preferredDate),
+        preferredTime,
+        message: message || null,
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      data: demoRequest,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

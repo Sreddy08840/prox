@@ -17,6 +17,8 @@ import tenantRouter from './routes/tenantRoutes';
 import helmet from 'helmet';
 import rateLimiter from './middlewares/rateLimiter';
 import healthRouter from './routes/healthRoutes';
+import requestLogger from './middlewares/requestLogger';
+import logger from './utils/logger';
 
 dotenv.config();
 
@@ -24,13 +26,45 @@ const app = express();
 
 app.set('trust proxy', true);
 
-// Standard Middlewares
-app.use(helmet());
+// Configure Helmet with robust CSP
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'", "http:", "https:", "data:", "blob:", "'unsafe-inline'", "'unsafe-eval'"],
+        frameAncestors: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+  })
+);
+
 app.use(rateLimiter);
-app.use(cors());
+
+// Configure CORS dynamically to protect origins
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:5173', 'http://localhost:5000'];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Structured logger middleware
+app.use(requestLogger);
 
 // Health Check Route
 app.use('/api/v1', healthRouter);
@@ -54,9 +88,18 @@ interface AppError extends Error {
 }
 
 // Global Error Handler
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   const statusCode = (err as AppError).statusCode || 500;
   const message = err.message || 'Internal Server Error';
+  
+  // Log error using structured logger
+  logger.error(`Error on request ${req.headers['x-request-id'] || 'N/A'}: ${message}`, {
+    requestId: req.headers['x-request-id'] || null,
+    path: req.originalUrl,
+    method: req.method,
+    statusCode,
+    stack: err.stack,
+  });
   
   res.status(statusCode).json({
     success: false,

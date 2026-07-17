@@ -74,7 +74,23 @@ interface FailedMessageItem {
   createdAt: string;
 }
 
-type TabType = 'users' | 'projects' | 'apikeys' | 'audit' | 'settings' | 'deliveries';
+interface DemoRequestItem {
+  id: string;
+  fullName: string;
+  companyName: string;
+  email: string;
+  phone: string;
+  country: string;
+  orgSize: string;
+  role: string;
+  projects: string;
+  preferredDate: string;
+  preferredTime: string;
+  message: string | null;
+  createdAt: string;
+}
+
+type TabType = 'users' | 'projects' | 'apikeys' | 'audit' | 'settings' | 'deliveries' | 'demos';
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState<TabType>('users');
@@ -89,6 +105,7 @@ export default function AdminPanel() {
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [settings, setSettings] = useState<SettingItem[]>([]);
   const [failedMsgs, setFailedMsgs] = useState<FailedMessageItem[]>([]);
+  const [demoRequests, setDemoRequests] = useState<DemoRequestItem[]>([]);
 
   // Forms states
   const [newUser, setNewUser] = useState({
@@ -133,6 +150,9 @@ export default function AdminPanel() {
       } else if (tab === 'deliveries') {
         const res = await api.get('/admin/failed-messages');
         setFailedMsgs(res.data.data);
+      } else if (tab === 'demos') {
+        const res = await api.get('/admin/demo-requests');
+        setDemoRequests(res.data.data);
       }
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -381,6 +401,15 @@ export default function AdminPanel() {
         >
           <Sliders size={14} />
           <span>System Settings</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('demos')}
+          className={`flex items-center space-x-1.5 pb-3 px-3 border-b-2 transition-all ${
+            activeTab === 'demos' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <FileText size={14} />
+          <span>Demo Requests</span>
         </button>
       </div>
 
@@ -929,6 +958,82 @@ export default function AdminPanel() {
                       </select>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* 7. DEMO REQUESTS TAB */}
+            {activeTab === 'demos' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">Lander Demo Requests</h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    View consultation requests and demonstration slots scheduled by external visitors.
+                  </p>
+                </div>
+
+                <div className="border rounded-xl bg-card overflow-hidden shadow-sm overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-muted/40 border-b text-[10px] font-bold text-muted-foreground uppercase select-none">
+                        <th className="p-4">Submission Date</th>
+                        <th className="p-4">Contact</th>
+                        <th className="p-4">Company</th>
+                        <th className="p-4">Country</th>
+                        <th className="p-4">Org Details</th>
+                        <th className="p-4">Preferred Slot</th>
+                        <th className="p-4">Message</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y font-semibold">
+                      {demoRequests.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center text-muted-foreground font-bold">
+                            No demo requests found in database.
+                          </td>
+                        </tr>
+                      ) : (
+                        demoRequests.map((req) => (
+                          <tr key={req.id} className="hover:bg-muted/15 transition-colors">
+                            <td className="p-4 text-muted-foreground font-mono text-[10px] whitespace-nowrap">
+                              {new Date(req.createdAt).toLocaleString()}
+                            </td>
+                            <td className="p-4">
+                              <div className="flex flex-col">
+                                <span className="text-foreground font-bold">{req.fullName}</span>
+                                <span className="text-muted-foreground text-[10px]">{req.email}</span>
+                                <span className="text-muted-foreground text-[10px]">{req.phone}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-foreground font-bold">{req.companyName}</td>
+                            <td className="p-4 text-muted-foreground font-bold">{req.country}</td>
+                            <td className="p-4">
+                              <div className="flex flex-col text-[10px]">
+                                <span className="text-foreground">Size: {req.orgSize}</span>
+                                <span className="text-muted-foreground">Role: {req.role}</span>
+                                <span className="text-muted-foreground">Projects: {req.projects}</span>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex flex-col">
+                                <span className="text-foreground font-bold">
+                                  {new Date(req.preferredDate).toLocaleDateString(undefined, {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </span>
+                                <span className="text-indigo-400 text-[10px] font-extrabold">{req.preferredTime}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-muted-foreground max-w-xs truncate" title={req.message || ''}>
+                              {req.message || '-'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}

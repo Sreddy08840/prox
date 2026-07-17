@@ -1,6 +1,16 @@
 import app from './app';
 import prisma from './config/database';
 
+// Validate mandatory environment variables at boot
+const requiredEnv = ['DATABASE_URL', 'JWT_SECRET'];
+for (const envVar of requiredEnv) {
+  if (!process.env[envVar]) {
+    // eslint-disable-next-line no-console
+    console.error(`[Bootstrap Error] Missing required environment variable: ${envVar}`);
+    process.exit(1);
+  }
+}
+
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
