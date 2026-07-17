@@ -49,12 +49,14 @@ jobs:
         working-directory: ./backend
         env:
           DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/propx_db_test?schema=public
+          DIRECT_URL: postgresql://postgres:postgrespassword@localhost:5432/propx_db_test?schema=public
         run: npx prisma generate
 
       - name: Run Database Migrations
         working-directory: ./backend
         env:
           DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/propx_db_test?schema=public
+          DIRECT_URL: postgresql://postgres:postgrespassword@localhost:5432/propx_db_test?schema=public
         run: npx prisma migrate deploy
 
       - name: Build Backend
