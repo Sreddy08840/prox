@@ -116,3 +116,26 @@ table tbody tr:hover {
 .selected-table-row {
   background-color: #EEF2FF !important;
 }
+
+/* Global Cursor Stabilization: Lock finger pointing hand cursor on all interactive elements & children */
+button,
+a,
+select,
+summary,
+[role="button"],
+.cursor-pointer,
+button *,
+a *,
+select *,
+summary *,
+[role="button"] *,
+.cursor-pointer * {
+  cursor: pointer !important;
+}
+
+/* Ensure background overlays & particle canvases never intercept mouse hit-testing */
+canvas,
+.pointer-events-none,
+.pointer-events-none * {
+  pointer-events: none !important;
+}

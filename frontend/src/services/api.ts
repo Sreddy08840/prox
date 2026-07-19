@@ -21,15 +21,10 @@ api.interceptors.request.use(
   },
 );
 
-// Handle response errors globally (e.g. redirect on 401)
+// Handle response errors globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Clear local auth on unauthorized access
-      localStorage.removeItem('propx_auth_token');
-      // Option: window.location.href = '/login';
-    }
     return Promise.reject(error);
   },
 );

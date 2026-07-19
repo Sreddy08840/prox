@@ -1,13 +1,13 @@
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  LogIn, 
-  Sparkles, 
-  Building2, 
-  Sliders, 
+import {
+  LayoutDashboard,
+  Users,
+  Settings,
+  LogIn,
+  Sparkles,
+  Building2,
+  Sliders,
   Search,
   ChevronDown,
   Calendar,
@@ -41,12 +41,6 @@ const Pipelines = lazy(() => import('./pages/Pipelines'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Landing = lazy(() => import('./pages/Landing'));
-const Product = lazy(() => import('./pages/Product'));
-const Solutions = lazy(() => import('./pages/Solutions'));
-const Pricing = lazy(() => import('./pages/Pricing'));
-const Resources = lazy(() => import('./pages/Resources'));
-const Company = lazy(() => import('./pages/Company'));
-const BookDemo = lazy(() => import('./pages/BookDemo'));
 
 
 
@@ -59,8 +53,8 @@ const SettingsPage = ({ currentUser }: { currentUser: { id: string; role: string
         <button
           onClick={() => setActiveTab('profile')}
           className={`text-sm font-semibold pb-2.5 border-b-2 transition-all ${activeTab === 'profile'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
+            ? 'border-primary text-primary'
+            : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
         >
           Organization Profile
@@ -68,8 +62,8 @@ const SettingsPage = ({ currentUser }: { currentUser: { id: string; role: string
         <button
           onClick={() => setActiveTab('team')}
           className={`text-sm font-semibold pb-2.5 border-b-2 transition-all ${activeTab === 'team'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
+            ? 'border-primary text-primary'
+            : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
         >
           Team Management
@@ -183,14 +177,14 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
   };
 
   const isActive = (path: string) => {
-    if (path === '/') {
-      return location.pathname === '/';
+    if (path === '/' || path === '/dashboard') {
+      return location.pathname === '/' || location.pathname === '/dashboard';
     }
     return location.pathname.startsWith(path);
   };
 
   const navItems = [
-    { to: '/', label: t.dashboard, icon: LayoutDashboard },
+    { to: '/dashboard', label: t.dashboard, icon: LayoutDashboard },
     { to: '/projects', label: t.projects, icon: Building2 },
     { to: '/leads', label: t.leads, icon: Users },
     { to: '/pipelines', label: 'Pipelines', icon: Sliders },
@@ -216,7 +210,7 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
           {/* Workspace Selector Mockup */}
           <div className="flex items-center justify-between">
             {!isSidebarCollapsed ? (
-              <div 
+              <div
                 onClick={() => setWorkspaceOpen(!workspaceOpen)}
                 className="w-full flex items-center justify-between p-2.5 rounded-xl border border-[#1F2937] bg-[#1E293B]/40 hover:bg-[#1E293B]/70 transition-all cursor-pointer select-none relative"
               >
@@ -254,30 +248,28 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
-                    active
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${active
                       ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
                       : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
-                  }`}
+                    }`}
                 >
                   <Icon size={15} className={`shrink-0 ${active ? 'text-white' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
                   {!isSidebarCollapsed && <span className="tracking-tight">{item.label}</span>}
-                  
+
                   {active && !isSidebarCollapsed && (
                     <span className="absolute right-3 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                   )}
                 </Link>
               );
             })}
-            
+
             {currentUser.role === 'ADMIN' && (
               <Link
                 to="/admin"
-                className={`flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
-                  isActive('/admin')
+                className={`flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${isActive('/admin')
                     ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
                     : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
-                }`}
+                  }`}
               >
                 <Sliders size={15} className={`shrink-0 ${isActive('/admin') ? 'text-white' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
                 {!isSidebarCollapsed && <span className="tracking-tight">{t.adminPanel}</span>}
@@ -302,11 +294,10 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${
-                    active
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${active
                       ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
                       : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center space-x-3 text-left">
                     <Icon size={15} className={`shrink-0 ${active ? 'text-white' : item.glow ? 'text-primary animate-pulse' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
@@ -342,21 +333,23 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
 
 
           {/* Logout */}
-          <Link
-            to="/login"
-            onClick={() => localStorage.removeItem('propx_auth_token')}
-            className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 transition-all duration-200"
+          <button
+            onClick={() => {
+              localStorage.removeItem('propx_auth_token');
+              window.location.href = '/login';
+            }}
+            className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 transition-all duration-200 w-full text-left bg-transparent border-0 cursor-pointer"
           >
             <LogIn size={16} className="shrink-0" />
             {!isSidebarCollapsed && <span className="tracking-tight">{t.logout}</span>}
-          </Link>
+          </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-16 sticky top-0 border-b bg-white/85 backdrop-blur-md flex items-center justify-between px-6 md:px-10 shrink-0 relative z-20 shadow-sm">
-          <div 
+          <div
             onClick={() => setIsSearchModalOpen(true)}
             className="hidden md:flex items-center space-x-2 relative w-72 lg:w-96 cursor-pointer select-none"
           >
@@ -372,7 +365,7 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
           <div className="flex items-center space-x-4 ml-auto">
             {/* Quick Date Filter Dropdown Selector */}
             <div className="relative">
-              <div 
+              <div
                 onClick={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
                 className="hidden sm:flex items-center bg-muted/20 border hover:bg-muted/40 transition-all px-3 py-1.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-foreground cursor-pointer select-none space-x-1.5"
               >
@@ -380,7 +373,7 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
                 <span>{selectedDateFilter}</span>
                 <ChevronDown size={11} className={`transition-transform duration-200 ${isDateDropdownOpen ? 'rotate-180' : ''}`} />
               </div>
-              
+
               {isDateDropdownOpen && (
                 <div className="absolute right-0 top-full mt-1.5 w-40 border border-border bg-card text-foreground rounded-xl shadow-lg p-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-200 text-left">
                   {['All Time', 'Last 24 Hours', 'Last 7 Days', 'Last 30 Days'].map(opt => (
@@ -400,7 +393,7 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
             </div>
 
             {/* AI Assistant Quick Copilot Button Drawer Toggle */}
-            <button 
+            <button
               onClick={() => setIsCopilotDrawerOpen(!isCopilotDrawerOpen)}
               className="flex items-center space-x-1.5 rounded-full bg-primary/10 border border-primary/20 hover:bg-primary/15 transition-all px-3.5 py-1.5 text-[11px] font-extrabold text-primary shadow-sm hover:scale-[1.02]"
             >
@@ -430,6 +423,7 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
         <main className="flex-1 p-6 md:p-10 overflow-y-auto w-full max-w-7xl mx-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/leads" element={<Leads />} />
@@ -466,14 +460,14 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
                 autoFocus
                 className="w-full bg-transparent focus:outline-none text-xs text-foreground font-bold"
               />
-              <button 
+              <button
                 onClick={() => setIsSearchModalOpen(false)}
                 className="text-[10px] font-black uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded-md hover:bg-muted/80 shrink-0"
               >
                 ESC
               </button>
             </div>
-            
+
             <div className="max-h-60 overflow-y-auto space-y-1">
               {searchResults.length === 0 ? (
                 <div className="text-center py-6 text-xs text-muted-foreground font-bold">No results found.</div>
@@ -508,7 +502,7 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
                 <Sparkles size={16} className="text-primary animate-pulse" />
                 <span>AI Copilot Helper</span>
               </div>
-              <button 
+              <button
                 onClick={() => setIsCopilotDrawerOpen(false)}
                 className="text-[10px] font-black uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded-md hover:bg-muted/80"
               >
@@ -578,7 +572,7 @@ function App() {
   const token = localStorage.getItem('propx_auth_token');
   const publicPaths = ['/login', '/product', '/solutions', '/pricing', '/resources', '/company', '/book-demo'];
   const isPublicPath = publicPaths.includes(window.location.pathname) || window.location.pathname.startsWith('/accept-invitation');
-  
+
   if (!token && !isPublicPath) {
     window.location.href = '/login';
     return null;
@@ -593,13 +587,14 @@ function App() {
         </div>
       }>
         <Routes>
-          <Route path="/login" element={<Landing />} />
-          <Route path="/product" element={<Product />} />
-          <Route path="/solutions" element={<Solutions />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/company" element={<Company />} />
-          <Route path="/book-demo" element={<BookDemo />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={token ? <Navigate to="/dashboard" replace /> : <Landing />} />
+          <Route path="/product" element={<Landing />} />
+          <Route path="/solutions" element={<Landing />} />
+          <Route path="/pricing" element={<Landing />} />
+          <Route path="/resources" element={<Landing />} />
+          <Route path="/company" element={<Landing />} />
+          <Route path="/book-demo" element={<Landing />} />
           <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
           <Route
             path="/*"
