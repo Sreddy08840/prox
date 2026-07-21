@@ -57,43 +57,79 @@ export const Landing: React.FC = () => {
     }
   };
 
-  // Product Features Data
+  // Product Features Data (12 Core Platform Features)
   const productFeatures = [
     {
-      title: "AI Lead Qualification",
-      description: "Automatically qualify client intent and financial timelines from inbound WhatsApp transcripts.",
+      title: "WhatsApp AI Agent",
+      description: "Automatically qualify client intent and financial timelines from inbound Meta WhatsApp transcripts.",
       icon: Sparkles,
-      benefits: ["Intent categorization (HOT/WARM/COLD)", "Budget bracket inference", "Financing readiness check"]
+      benefits: ["Meta Graph Webhook Ingestion", "Anthropic Claude 3.5 qualification", "Interactive Sandbox Simulator"]
     },
     {
-      title: "AI Negotiation Copilot",
-      description: "Real-time suggestion agent contextually drafting follow-ups and addressing client objections.",
+      title: "AI Lead Scoring (Buyer Signal AI)",
+      description: "Evaluate buyer budget, purchasing timeline, location preferences, and assign real-time HOT/WARM/COLD intent scores.",
+      icon: TrendingUp,
+      benefits: ["0-100 score calculation", "Intent breakdown analysis", "Prisma DB auto-persistence"]
+    },
+    {
+      title: "Property & Unit Fit Matching",
+      description: "Algorithmic unit recommendations comparing buyer preferences against available project inventory in real-time.",
+      icon: Building2,
+      benefits: ["Budget tolerance matching", "Location & BHK filter alignment", "Unit recommendation cards"]
+    },
+    {
+      title: "Site Visit Booking & Calendar Sync",
+      description: "Convert inquiries into booked site visits with automated Google Calendar render URLs and iCal (.ics) file downloads.",
       icon: Sliders,
-      benefits: ["Auto-generated reply suggestions", "Objection handling blueprints", "Active sentiment analysis"]
+      benefits: ["1-click Google Calendar sync", "Downloadable .ics invite streams", "Automatic meeting activity logging"]
     },
     {
-      title: "WhatsApp API Ingestion",
-      description: "Direct API hook syncing Meta Business messages to centralized lead timelines without manual entries.",
+      title: "Dynamic Pricing Engine",
+      description: "Automated unit price adjusters recalculating pricing elasticity based on inquiry demand velocity (+5% demand bump, -3% promo).",
+      icon: Sparkles,
+      benefits: ["Automated yield optimization", "Inquiry velocity tracking", "Prisma unit price updates"]
+    },
+    {
+      title: "Demand Intelligence & Benchmarking",
+      description: "Predict project launch appetite, track competitor absorption velocity, and evaluate launch readiness scores.",
+      icon: TrendingUp,
+      benefits: ["Competitor Benchmark Index (88.5%)", "Launch Readiness Score (92/100)", "Supply-Demand Surplus Ratio"]
+    },
+    {
+      title: "HubSpot CRM Active API Sync",
+      description: "One-way production API sync pushing qualified lead profiles and AI reasoning directly to HubSpot Contacts V3.",
       icon: MessageSquare,
-      benefits: ["Live thread synchronizations", "Outbound automation queues", "Failed message delivery retries"]
+      benefits: ["Live HTTP POST API integration", "Bearer token authentication", "Structured contact property mapping"]
     },
     {
-      title: "CRM Lead Routing",
+      title: "Automated Background Drip Engine",
+      description: "Background scheduler running periodic checks for dormant leads (>24h), triggering automated re-engagement tasks.",
+      icon: Users,
+      benefits: ["30-min periodic cron checks", "Automated follow-up activity creation", "SLA alert notifications"]
+    },
+    {
+      title: "Executive Sales Analytics",
+      description: "Aggregate inquiry statistics, budget distribution heatmaps, and SLA response speed dashboards.",
+      icon: TrendingUp,
+      benefits: ["Interactive Recharts layouts", "Live DB aggregations", "SLA breach alerts"]
+    },
+    {
+      title: "Workload Lead Auto-Routing",
       description: "Distribute hot qualified inquiries instantly to active agents based on custom workload algorithms.",
       icon: Users,
       benefits: ["Workload limit balancing", "Auto-routing event notifications", "Detailed lead assignment logs"]
     },
     {
       title: "Interactive Inventory Mapping",
-      description: "Map spatial layout configurations, pricing grids, and real-time status of your projects visual coordinates.",
+      description: "Map spatial layout configurations, pricing grids, and real-time status of your project's visual coordinates.",
       icon: Building2,
-      benefits: ["Spatial coordinate markings", "Status sync (Sold, Reserved, Rent)", "Unit brochure email links"]
+      benefits: ["Spatial coordinate markings", "Status sync (Sold, Reserved, Available)", "Unit brochure email links"]
     },
     {
-      title: "Predictive Analytics",
-      description: "Aggregate inquiry statistics, budget distribution ratios, and response speed SLA dashboards.",
-      icon: TrendingUp,
-      benefits: ["Interactive Recharts layouts", "Daily admin metric deliveries", "Detailed conversion timelines"]
+      title: "Admin Panel & Governance",
+      description: "Complete RBAC management for team roles, organization configuration, API tokens, and audit logs.",
+      icon: Sliders,
+      benefits: ["ADMIN & AGENT role permissions", "Multi-tenant organization isolation", "Security token versioning"]
     }
   ];
 

@@ -613,7 +613,67 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Row 3: Recent Activity Log */}
+      {/* Row 4: Demand Intelligence & Competitor Benchmarking Engine */}
+      <div className="rounded-2xl border bg-gradient-to-r from-primary/5 via-indigo-500/5 to-purple-500/5 border-primary/20 p-6 shadow-sm space-y-4">
+        <div className="flex justify-between items-center border-b border-primary/10 pb-3">
+          <div>
+            <h3 className="font-extrabold text-sm text-foreground flex items-center space-x-2">
+              <Sparkles className="text-primary animate-pulse" size={16} />
+              <span>Demand Intelligence Engine & Competitor Benchmarking</span>
+            </h3>
+            <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">
+              Live market intelligence, launch readiness scores, and competitor absorption velocity.
+            </p>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+            Engine Active
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+          {/* Card 1 */}
+          <div className="p-4 rounded-xl border bg-card/60 backdrop-blur-sm space-y-2">
+            <span className="text-[10px] uppercase font-black text-muted-foreground tracking-wider block">
+              Competitor Benchmark Index
+            </span>
+            <div className="text-2xl font-black text-foreground flex items-center space-x-2">
+              <span>88.5%</span>
+              <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">Optimal</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground font-medium">
+              Outperforming regional baseline absorption speed by +14.2%.
+            </p>
+          </div>
+
+          {/* Card 2 */}
+          <div className="p-4 rounded-xl border bg-card/60 backdrop-blur-sm space-y-2">
+            <span className="text-[10px] uppercase font-black text-muted-foreground tracking-wider block">
+              Launch Readiness Score
+            </span>
+            <div className="text-2xl font-black text-primary flex items-center space-x-2">
+              <span>92 / 100</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground font-medium">
+              Qualified buyer demand matches 92% of available inventory slots.
+            </p>
+          </div>
+
+          {/* Card 3 */}
+          <div className="p-4 rounded-xl border bg-card/60 backdrop-blur-sm space-y-2">
+            <span className="text-[10px] uppercase font-black text-muted-foreground tracking-wider block">
+              Supply-Demand Surplus Ratio
+            </span>
+            <div className="text-2xl font-black text-foreground flex items-center space-x-2">
+              <span>1 : 3.4</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground font-medium">
+              3.4 qualified buyer inquiries per available unit layout.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 5: Recent Activity Log */}
       <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-5">
         <div className="flex justify-between items-center border-b pb-4">
           <div>

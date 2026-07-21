@@ -11,6 +11,8 @@ import {
   logActivity,
   importCSV,
   createPublicLead,
+  scheduleSiteVisit,
+  getSiteVisitIcs,
 } from '../controllers/leadController';
 
 const router = Router();
@@ -135,5 +137,7 @@ router.get('/:id', protect, validate(uuidIdSchema), getLead);
 router.put('/:id', protect, validate(updateLeadSchema), updateLead);
 router.delete('/:id', protect, restrictTo('ADMIN', 'SALES_MANAGER'), validate(uuidIdSchema), deleteLead);
 router.post('/:id/activities', protect, validate(activityLogSchema), logActivity);
+router.post('/:id/site-visit', protect, scheduleSiteVisit);
+router.get('/:id/site-visit/ics', getSiteVisitIcs);
 
 export default router;

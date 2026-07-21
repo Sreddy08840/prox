@@ -813,3 +813,118 @@ export const createPublicLead = async (
     next(error);
   }
 };
+
+/**
+ * Schedule Site Visit & Generate Calendar Sync Links (Google & iCal)
+ */
+export const scheduleSiteVisit = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { visitDate, notes, location } = req.body;
+
+    const lead = await prisma.lead.findUnique({
+      where: { id },
+      include: { organization: true },
+    });
+
+    if (!lead) {
+      throw new CRMError('Lead not found', 404);
+    }
+
+    const startDate = visitDate ? new Date(visitDate) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour duration
+
+    const formattedStart = startDate.toISOString().replace(/-|:|\.\d\d\d/g, '');
+    const formattedEnd = endDate.toISOString().replace(/-|:|\.\d\d\d/g, '');
+
+    const eventTitle = encodeURIComponent(`PropX Site Visit: ${lead.firstName} ${lead.lastName}`);
+    const eventDetails = encodeURIComponent(`Property Site Visit scheduled for ${lead.firstName} ${lead.lastName}.\nPhone: ${lead.phone || 'N/A'}\nNotes: ${notes || 'Site visit consultation.'}`);
+    const eventLocation = encodeURIComponent(location || lead.organization?.name || 'PropX Real Estate Site');
+
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${formattedStart}/${formattedEnd}&details=${eventDetails}&location=${eventLocation}`;
+
+    // Create lead activity
+    await prisma.leadActivity.create({
+      data: {
+        leadId: lead.id,
+        type: 'MEETING',
+        description: `Site Visit Scheduled for ${startDate.toLocaleString()}. Google Calendar Sync: ${googleCalendarUrl}`,
+      },
+    });
+
+    // Update lead status to QUALIFIED
+    await prisma.lead.update({
+      where: { id: lead.id },
+      data: { status: 'QUALIFIED' },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Site visit scheduled and calendar sync links generated successfully.',
+      data: {
+        visitDate: startDate.toISOString(),
+        googleCalendarUrl,
+        icsUrl: `/api/v1/leads/${lead.id}/site-visit/ics?date=${encodeURIComponent(startDate.toISOString())}`,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Generate iCal (.ics) file stream for Site Visit
+ */
+export const getSiteVisitIcs = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const visitDateParam = req.query.date as string;
+
+    const lead = await prisma.lead.findUnique({
+      where: { id },
+      include: { organization: true },
+    });
+
+    if (!lead) {
+      throw new CRMError('Lead not found', 404);
+    }
+
+    const startDate = visitDateParam ? new Date(visitDateParam) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+
+    const formatDate = (d: Date) => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
+
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//PropX Real Estate Platform//Site Visit Calendar//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `UID:site-visit-${lead.id}-${startDate.getTime()}@propx.com`,
+      `DTSTAMP:${formatDate(new Date())}`,
+      `DTSTART:${formatDate(startDate)}`,
+      `DTEND:${formatDate(endDate)}`,
+      `SUMMARY:PropX Site Visit: ${lead.firstName} ${lead.lastName}`,
+      `DESCRIPTION:Property Site Visit scheduled for ${lead.firstName} ${lead.lastName}. Phone: ${lead.phone || 'N/A'}`,
+      `LOCATION:${lead.organization?.name || 'PropX Site Office'}`,
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="site-visit-${lead.firstName}.ics"`);
+    res.send(icsContent);
+  } catch (error) {
+    next(error);
+  }
+};

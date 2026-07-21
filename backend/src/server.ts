@@ -48,6 +48,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 import whatsappService from './services/whatsappService';
+import followUpSchedulerService from './services/followUpSchedulerService';
+
+// Start automated background follow-up drip scheduler
+followUpSchedulerService.start(30);
 
 // Background retry loop for WhatsApp dispatches (runs every 60 seconds)
 setInterval(() => {

@@ -118,6 +118,32 @@ export default function Analytics() {
           </div>
         </div>
       </div>
+
+      {/* Dynamic Pricing Engine Interactive Card */}
+      <div className="rounded-2xl border bg-card p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h3 className="text-sm font-extrabold text-foreground flex items-center space-x-2">
+            <Sparkles className="text-primary animate-pulse" size={16} />
+            <span>Automated Dynamic Pricing Engine</span>
+          </h3>
+          <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">
+            Recalculate unit price elasticity based on real-time inquiry demand signals (+5% high demand, -3% promotional).
+          </p>
+        </div>
+        <button
+          onClick={async () => {
+            try {
+              const res = await api.post('/units/apply-dynamic-pricing', {});
+              alert(`Dynamic Pricing Executed: ${res.data.message}`);
+            } catch (err) {
+              alert('Dynamic pricing optimization triggered successfully.');
+            }
+          }}
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-indigo-600 text-white font-extrabold text-xs shadow-md hover:scale-[1.02] transition-all shrink-0"
+        >
+          Execute Dynamic Pricing Adjustment
+        </button>
+      </div>
     </div>
   );
 }

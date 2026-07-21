@@ -33,19 +33,46 @@ class CrmSyncService {
         },
       };
 
-      // In real life, we would do: await axios.post('https://api.hubapi.com/crm/v3/objects/contacts', hubspotPayload, { headers: { Authorization: `Bearer ${process.env.HUBSPOT_ACCESS_TOKEN}` } });
-      logger.info(`[CRM Sync] Successfully synced Lead ${lead.id} to HubSpot. Payload: ${JSON.stringify(hubspotPayload)}`);
+      const hubspotToken = process.env.HUBSPOT_ACCESS_TOKEN;
+      let syncNote = '';
+
+      if (hubspotToken) {
+        const response = await axios.post(
+          'https://api.hubapi.com/crm/v3/objects/contacts',
+          hubspotPayload,
+          {
+            headers: {
+              Authorization: `Bearer ${hubspotToken}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 8000,
+          }
+        );
+        logger.info(`[CRM Sync] Successfully synced Lead ${lead.id} to HubSpot CRM. Contact ID: ${response.data?.id}`);
+        syncNote = `Lead profile successfully synced to HubSpot CRM (Contact ID: ${response.data?.id || 'OK'}).`;
+      } else {
+        logger.info(`[CRM Sync] Simulated HubSpot API dispatch for Lead ${lead.id} (HUBSPOT_ACCESS_TOKEN not set in env). Payload: ${JSON.stringify(hubspotPayload)}`);
+        syncNote = `Lead profile prepared for HubSpot CRM sync (Payload: ${JSON.stringify(hubspotPayload)}). Set HUBSPOT_ACCESS_TOKEN for live cloud sync.`;
+      }
 
       // Log activity
       await prisma.leadActivity.create({
         data: {
           leadId,
           type: 'NOTE',
-          description: 'Lead profile successfully synced to HubSpot CRM.',
+          description: syncNote,
         },
       });
     } catch (err) {
-      logger.error(`[CRM Sync] HubSpot sync failed for lead ${leadId}:`, err);
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      logger.error(`[CRM Sync] HubSpot sync error for lead ${leadId}:`, errorMsg);
+      await prisma.leadActivity.create({
+        data: {
+          leadId,
+          type: 'NOTE',
+          description: `HubSpot CRM sync attempt finished with status: ${errorMsg}`,
+        },
+      });
     }
   }
 

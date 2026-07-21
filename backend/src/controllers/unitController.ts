@@ -640,3 +640,94 @@ export const getUnitStats = async (
     next(error);
   }
 };
+
+/**
+ * Dynamic Pricing Engine: Execute dynamic pricing optimizations
+ */
+export const applyDynamicPricing = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const orgId = req.user?.organizationId;
+    if (!orgId) {
+      throw new CRMError('User is not associated with an organization', 400);
+    }
+
+    const { unitTypeId, adjustmentFactor } = req.body;
+
+    const unitTypes = await prisma.unitType.findMany({
+      where: {
+        organizationId: orgId,
+        ...(unitTypeId ? { id: unitTypeId } : {}),
+        deletedAt: null,
+      },
+      include: {
+        units: { where: { status: 'AVAILABLE', deletedAt: null } },
+      },
+    });
+
+    let updatedUnitsCount = 0;
+    const adjustmentsLog: Array<{ unitTypeId: string; name: string; oldPrice: number; newPrice: number; signal: string }> = [];
+
+    for (const type of unitTypes) {
+      const availableUnits = type.units;
+      if (availableUnits.length === 0) continue;
+
+      const interestedLeadsCount = await prisma.lead.count({
+        where: {
+          organizationId: orgId,
+          deletedAt: null,
+          preferredUnitId: { in: availableUnits.map((u) => u.id) },
+        },
+      });
+
+      let multiplier = adjustmentFactor ? parseFloat(adjustmentFactor) : 1.0;
+      let signal = 'BALANCED';
+
+      if (!adjustmentFactor) {
+        if (availableUnits.length <= 3 && interestedLeadsCount >= 2) {
+          multiplier = 1.05; // +5% High demand escalation
+          signal = 'HIGH_DEMAND_ESCALATION';
+        } else if (availableUnits.length >= 5 && interestedLeadsCount === 0) {
+          multiplier = 0.97; // -3% Promotional absorption incentive
+          signal = 'PROMOTIONAL_DISCOUNT';
+        }
+      }
+
+      if (multiplier !== 1.0) {
+        for (const unit of availableUnits) {
+          if (!unit.price) continue;
+          const currentPrice = parseFloat(unit.price.toString());
+          const newPrice = Math.round(currentPrice * multiplier);
+
+          await prisma.unit.update({
+            where: { id: unit.id },
+            data: { price: newPrice },
+          });
+
+          updatedUnitsCount++;
+          adjustmentsLog.push({
+            unitTypeId: type.id,
+            name: `${type.name} (Unit ${unit.unitNumber})`,
+            oldPrice: currentPrice,
+            newPrice,
+            signal,
+          });
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Dynamic Pricing Engine optimized ${updatedUnitsCount} available units successfully.`,
+      data: {
+        updatedUnitsCount,
+        adjustments: adjustmentsLog,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

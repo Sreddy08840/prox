@@ -13,6 +13,7 @@ import {
   updateUnit,
   deleteUnit,
   getUnitStats,
+  applyDynamicPricing,
 } from '../controllers/unitController';
 
 const router = Router();
@@ -118,5 +119,6 @@ router.get('/projects/:projectId/units/stats', protect, validate(projectIdParams
 router.get('/units/:id', protect, validate(uuidIdSchema), getUnit);
 router.put('/units/:id', protect, restrictTo('ADMIN', 'SALES_MANAGER'), validate(updateUnitSchema), updateUnit);
 router.delete('/units/:id', protect, restrictTo('ADMIN'), validate(uuidIdSchema), deleteUnit);
+router.post('/apply-dynamic-pricing', protect, restrictTo('ADMIN', 'SALES_MANAGER'), applyDynamicPricing);
 
 export default router;

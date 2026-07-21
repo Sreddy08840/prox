@@ -98,6 +98,14 @@ export default function LeadDetail() {
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState('NEW');
   const [source, setSource] = useState('');
+
+  // Site Visit Modal State
+  const [isSiteVisitOpen, setIsSiteVisitOpen] = useState(false);
+  const [siteVisitDate, setSiteVisitDate] = useState(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16));
+  const [siteVisitNotes, setSiteVisitNotes] = useState('');
+  const [googleCalUrl, setGoogleCalUrl] = useState('');
+  const [icsDownloadUrl, setIcsDownloadUrl] = useState('');
+  const [schedulingVisit, setSchedulingVisit] = useState(false);
   const [budget, setBudget] = useState('');
   const [timeline, setTimeline] = useState('');
   const [financingStatus, setFinancingStatus] = useState('');
@@ -490,8 +498,19 @@ export default function LeadDetail() {
               </div>
             </div>
 
+            {/* Site Visit & Calendar Sync Banner */}
+            <div className="pt-4 border-t mt-4">
+              <button
+                onClick={() => setIsSiteVisitOpen(true)}
+                className="w-full flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-primary to-indigo-600 text-white py-2.5 text-xs font-extrabold shadow-md hover:opacity-95 transition-all"
+              >
+                <Clock size={14} />
+                <span>Book Site Visit & Sync Calendar</span>
+              </button>
+            </div>
+
             {/* Action Buttons */}
-            <div className="pt-6 border-t mt-6 flex gap-3 shrink-0">
+            <div className="pt-4 border-t mt-4 flex gap-3 shrink-0">
               <button
                 onClick={() => setIsEditOpen(true)}
                 className="w-1/2 flex items-center justify-center space-x-1.5 rounded-lg border border-input bg-background py-2 text-xs font-semibold hover:bg-accent transition-colors shadow-sm"
@@ -912,6 +931,108 @@ export default function LeadDetail() {
                   )}
                 </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Site Visit Booking Modal */}
+      {isSiteVisitOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-lg rounded-2xl border border-border shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center space-x-2">
+                <Clock className="text-primary" size={18} />
+                <h3 className="text-base font-extrabold text-foreground">Schedule Site Visit & Sync Calendar</h3>
+              </div>
+              <button
+                onClick={() => setIsSiteVisitOpen(false)}
+                className="text-muted-foreground hover:text-foreground text-sm font-bold"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setSchedulingVisit(true);
+                try {
+                  const res = await api.post(`/leads/${id}/site-visit`, {
+                    visitDate: siteVisitDate,
+                    notes: siteVisitNotes,
+                  });
+                  if (res.data.success) {
+                    setGoogleCalUrl(res.data.data.googleCalendarUrl);
+                    setIcsDownloadUrl(res.data.data.icsUrl);
+                    fetchLead();
+                  }
+                } catch (err) {
+                  // eslint-disable-next-line no-console
+                  console.error('Failed to schedule visit:', err);
+                } finally {
+                  setSchedulingVisit(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="text-xs font-bold uppercase text-muted-foreground block mb-1">
+                  Site Visit Date & Time
+                </label>
+                <input
+                  type="datetime-local"
+                  value={siteVisitDate}
+                  onChange={(e) => setSiteVisitDate(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 border rounded-lg bg-background text-foreground text-sm font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase text-muted-foreground block mb-1">
+                  Special Notes / Meeting Location
+                </label>
+                <textarea
+                  value={siteVisitNotes}
+                  onChange={(e) => setSiteVisitNotes(e.target.value)}
+                  placeholder="E.g. Meet buyer at PropX Sales Lounge, Tower B..."
+                  className="w-full px-3 py-2 border rounded-lg bg-background text-foreground text-xs h-20"
+                />
+              </div>
+
+              <div className="pt-2 flex space-x-2">
+                <button
+                  type="submit"
+                  disabled={schedulingVisit}
+                  className="flex-1 py-2.5 bg-primary text-white text-xs font-extrabold rounded-lg hover:bg-primary/95 transition-all shadow-md flex items-center justify-center space-x-2"
+                >
+                  {schedulingVisit ? <Loader2 className="animate-spin" size={14} /> : <span>Confirm & Generate Links</span>}
+                </button>
+              </div>
+
+              {googleCalUrl && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl space-y-2 text-xs">
+                  <div className="font-extrabold text-emerald-600 dark:text-emerald-400">✅ Site Visit Scheduled! Sync your calendar:</div>
+                  <div className="flex gap-2">
+                    <a
+                      href={googleCalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-center font-bold hover:bg-emerald-700 transition-all text-[11px]"
+                    >
+                      📅 Add to Google Calendar
+                    </a>
+                    <a
+                      href={`http://localhost:5000${icsDownloadUrl}`}
+                      download
+                      className="flex-1 py-2 bg-slate-800 text-white rounded-lg text-center font-bold hover:bg-slate-900 transition-all text-[11px]"
+                    >
+                      📥 Download iCal (.ics)
+                    </a>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         </div>
