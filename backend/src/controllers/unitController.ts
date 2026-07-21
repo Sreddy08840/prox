@@ -652,7 +652,7 @@ export const applyDynamicPricing = async (
   try {
     const orgId = req.user?.organizationId;
     if (!orgId) {
-      throw new CRMError('User is not associated with an organization', 400);
+      throw new InventoryError('User is not associated with an organization', 400);
     }
 
     const { unitTypeId, adjustmentFactor } = req.body;
