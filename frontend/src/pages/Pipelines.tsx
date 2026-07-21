@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { Sliders, Plus, IndianRupee, Loader2 } from 'lucide-react';
+import { Sliders, Plus, IndianRupee, Loader2, MoveRight } from 'lucide-react';
 
 interface Lead {
   id: string;
@@ -26,23 +26,41 @@ const STAGES = [
 export default function Pipelines() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchLeads = async () => {
-      try {
-        const response = await api.get('/leads', { params: { limit: 100 } });
-        if (response.data.success) {
-          setLeads(response.data.data.leads);
-        }
-      } catch (_err) {
-        // Ignore fallback
-      } finally {
-        setLoading(false);
+  const fetchLeads = async () => {
+    try {
+      const response = await api.get('/leads', { params: { limit: 100 } });
+      if (response.data.success) {
+        setLeads(response.data.data.leads || []);
       }
-    };
+    } catch (_err) {
+      // Ignore
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchLeads();
   }, []);
+
+  const handleStatusChange = async (leadId: string, newStatus: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setUpdatingId(leadId);
+    try {
+      const res = await api.put(`/leads/${leadId}`, { status: newStatus });
+      if (res.data.success) {
+        setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to update lead status:', err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const getLeadsByStage = (status: string) => {
     return leads.filter(l => l.status === status);
@@ -54,10 +72,10 @@ export default function Pipelines() {
         <div>
           <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center space-x-2.5">
             <Sliders className="text-primary animate-pulse" size={26} />
-            <span>Deals Pipeline</span>
+            <span>Deals Pipeline Kanban</span>
           </h1>
           <p className="text-xs text-muted-foreground mt-1 font-semibold">
-            Real-time status Kanban board. Drag-and-drop lead requirements tracking.
+            Live database deals pipeline. Shift leads between stages in real-time.
           </p>
         </div>
         <button
@@ -65,7 +83,7 @@ export default function Pipelines() {
           className="flex items-center space-x-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground hover:bg-primary/95 transition-all shadow-md shrink-0"
         >
           <Plus size={14} />
-          <span>Add Lead</span>
+          <span>Add Lead to Pipeline</span>
         </button>
       </div>
 
@@ -75,8 +93,10 @@ export default function Pipelines() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto min-h-[550px] pb-4">
-          {STAGES.map(stage => {
+          {STAGES.map((stage, idx) => {
             const stageLeads = getLeadsByStage(stage.id);
+            const nextStage = STAGES[idx + 1];
+
             return (
               <div key={stage.id} className="rounded-2xl border bg-card/60 p-4 space-y-4 flex flex-col min-w-[220px]">
                 {/* Column Header */}
@@ -100,7 +120,7 @@ export default function Pipelines() {
                       <div
                         key={lead.id}
                         onClick={() => navigate(`/leads/${lead.id}`)}
-                        className="rounded-xl border bg-card p-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer space-y-2 border-border/80 group"
+                        className="rounded-xl border bg-card p-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer space-y-2 border-border/80 group relative"
                       >
                         <div className="flex items-start justify-between gap-1.5">
                           <span className="font-extrabold text-foreground block text-[11px] group-hover:text-primary transition-colors leading-tight text-left">
@@ -125,9 +145,18 @@ export default function Pipelines() {
                               {lead.budget ? parseFloat(lead.budget).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}
                             </span>
                           </div>
-                          <span className="text-[9px] text-muted-foreground/75 font-semibold bg-muted/50 px-1 rounded">
-                            {lead.source || 'Website'}
-                          </span>
+                          
+                          {nextStage && (
+                            <button
+                              disabled={updatingId === lead.id}
+                              onClick={(e) => handleStatusChange(lead.id, nextStage.id, e)}
+                              className="text-[9px] font-extrabold text-primary bg-primary/10 hover:bg-primary/20 px-1.5 py-0.5 rounded flex items-center space-x-1 transition-all"
+                              title={`Advance to ${nextStage.title}`}
+                            >
+                              <span>Advance</span>
+                              <MoveRight size={10} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))
