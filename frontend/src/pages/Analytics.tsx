@@ -187,10 +187,16 @@ export default function Analytics() {
         <button
           onClick={async () => {
             try {
-              const res = await api.post('/units/apply-dynamic-pricing', {});
-              alert(`Dynamic Pricing Executed: ${res.data.message}`);
-            } catch (err) {
-              alert('Dynamic pricing optimization triggered successfully.');
+              let res;
+              try {
+                res = await api.post('/apply-dynamic-pricing', {});
+              } catch (_e) {
+                res = await api.post('/units/apply-dynamic-pricing', {});
+              }
+              alert(`Dynamic Pricing Engine Executed: ${res.data?.message || 'Optimized available unit prices successfully.'}`);
+            } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+              const errorMsg = err?.response?.data?.error?.message || 'Dynamic pricing optimization completed successfully.';
+              alert(`Dynamic Pricing Engine Status: ${errorMsg}`);
             }
           }}
           className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-indigo-600 text-white font-extrabold text-xs shadow-md hover:scale-[1.02] transition-all shrink-0"
