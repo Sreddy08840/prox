@@ -1,3 +1,4 @@
+import api from '../services/api';
 import { TrendingUp, Clock, AlertCircle, Sparkles } from 'lucide-react';
 import {
   LineChart,
