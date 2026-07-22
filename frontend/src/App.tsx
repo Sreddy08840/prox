@@ -249,8 +249,8 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
                   key={item.to}
                   to={item.to}
                   className={`flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${active
-                      ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
-                      : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
+                    ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
+                    : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
                     }`}
                 >
                   <Icon size={15} className={`shrink-0 ${active ? 'text-white' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
@@ -267,8 +267,8 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
               <Link
                 to="/admin"
                 className={`flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${isActive('/admin')
-                    ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
-                    : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
+                  ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
+                  : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
                   }`}
               >
                 <Sliders size={15} className={`shrink-0 ${isActive('/admin') ? 'text-white' : 'text-[#CBD5E1] group-hover:text-white transition-colors'}`} />
@@ -295,8 +295,8 @@ function MainLayout({ t, currentUser }: MainLayoutProps) {
                   key={item.to}
                   to={item.to}
                   className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 group relative ${active
-                      ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
-                      : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
+                    ? 'bg-gradient-to-r from-[#6D5EF5] to-[#5B4FEA] text-white shadow-sm border border-[#6D5EF5]/20 scale-[1.02]'
+                    : 'text-[#CBD5E1] hover:bg-[#1E293B] hover:text-white'
                     }`}
                 >
                   <div className="flex items-center space-x-3 text-left">
