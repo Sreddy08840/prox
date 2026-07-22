@@ -1,12 +1,38 @@
 import rateLimit from 'express-rate-limit';
+import { Request } from 'express';
 
 const windowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10); // Default 15 minutes
-const max = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000', 10); // Limit each IP to 1000 requests per windowMs
+const max = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '2000', 10); // Limit each IP to 2000 requests per windowMs
 
 export const rateLimiter = rateLimit({
   windowMs,
   max,
-  skip: () => process.env.NODE_ENV === 'development',
+  skip: (req: Request) => {
+    // Skip in development mode
+    if (process.env.NODE_ENV === 'development') return true;
+
+    // Skip health check, liveness probes, metrics, and root landing page
+    const path = req.originalUrl || req.url || '';
+    if (
+      path === '/' ||
+      path.includes('/health') ||
+      path.includes('/liveness') ||
+      path.includes('/metrics')
+    ) {
+      return true;
+    }
+    return false;
+  },
+  keyGenerator: (req: Request): string => {
+    // Extract actual client IP behind proxy (Nginx / Render load balancer)
+    const xForwardedFor = req.headers['x-forwarded-for'];
+    if (xForwardedFor) {
+      const rawIp = Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor;
+      const clientIp = rawIp.split(',')[0].trim();
+      if (clientIp) return clientIp;
+    }
+    return req.ip || req.socket.remoteAddress || '127.0.0.1';
+  },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: {

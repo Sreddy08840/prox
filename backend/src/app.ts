@@ -39,8 +39,6 @@ app.use(
   })
 );
 
-app.use(rateLimiter);
-
 // Configure CORS dynamically to protect origins
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
@@ -79,7 +77,7 @@ app.use(express.urlencoded({ extended: true }));
 // Structured logger middleware
 app.use(requestLogger);
 
-// Friendly root endpoint
+// Friendly root endpoint & Health Check routes (unthrottled for probes)
 app.get('/', (req: Request, res: Response) => {
   res.status(200).json({
     name: 'PropX API Gateway',
@@ -93,8 +91,10 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
-// Health Check Route
 app.use('/api/v1', healthRouter);
+
+// Apply rate limiter to API routes
+app.use(rateLimiter);
 
 // Mount Routes
 app.use('/api/v1/auth', authRouter);
