@@ -2,7 +2,7 @@ import rateLimit from 'express-rate-limit';
 import { Request } from 'express';
 
 const windowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10); // Default 15 minutes
-const max = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '2000', 10); // Limit each IP to 2000 requests per windowMs
+const max = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '5000', 10); // Limit each IP to 5000 requests per windowMs
 
 export const rateLimiter = rateLimit({
   windowMs,
@@ -11,13 +11,14 @@ export const rateLimiter = rateLimit({
     // Skip in development mode
     if (process.env.NODE_ENV === 'development') return true;
 
-    // Skip health check, liveness probes, metrics, and root landing page
+    // Skip health check, liveness probes, metrics, root landing page, and frequent UI polling endpoints
     const path = req.originalUrl || req.url || '';
     if (
       path === '/' ||
       path.includes('/health') ||
       path.includes('/liveness') ||
-      path.includes('/metrics')
+      path.includes('/metrics') ||
+      path.includes('/unread-count')
     ) {
       return true;
     }
@@ -45,3 +46,4 @@ export const rateLimiter = rateLimit({
 });
 
 export default rateLimiter;
+

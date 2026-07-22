@@ -1,5 +1,15 @@
 import app from './app';
 import prisma from './config/database';
+import logger from './utils/logger';
+
+// Catch uncaught process errors to prevent silent node process crashes (502 Bad Gateway)
+process.on('uncaughtException', (err: Error) => {
+  logger.error(`[Server] Uncaught Exception: ${err.message}`, { stack: err.stack });
+});
+
+process.on('unhandledRejection', (reason: unknown) => {
+  logger.error(`[Server] Unhandled Rejection: ${reason instanceof Error ? reason.message : String(reason)}`);
+});
 
 // Validate mandatory environment variables at boot
 const requiredEnv = ['DATABASE_URL', 'JWT_SECRET'];
@@ -36,14 +46,20 @@ const runDailySummaries = async () => {
 };
 
 // Run every 24 hours
-setInterval(runDailySummaries, 24 * 60 * 60 * 1000);
+setInterval(() => {
+  runDailySummaries().catch((err) => {
+    logger.error(`[Daily Summaries] Background error: ${err instanceof Error ? err.message : String(err)}`);
+  });
+}, 24 * 60 * 60 * 1000);
 
 // In local development, execute after 5 seconds of uptime to verify mail delivery
 if (process.env.NODE_ENV !== 'production') {
   setTimeout(() => {
     // eslint-disable-next-line no-console
     console.info('[Server] Bootstrapping initial development Daily Summary check...');
-    runDailySummaries();
+    runDailySummaries().catch((err) => {
+      logger.error(`[Daily Summaries] Bootstrapping error: ${err instanceof Error ? err.message : String(err)}`);
+    });
   }, 5000);
 }
 
@@ -55,7 +71,9 @@ followUpSchedulerService.start(30);
 
 // Background retry loop for WhatsApp dispatches (runs every 60 seconds)
 setInterval(() => {
-  whatsappService.retryFailedMessages();
+  whatsappService.retryFailedMessages().catch((err) => {
+    logger.error(`[WhatsApp Service] Background retry error: ${err instanceof Error ? err.message : String(err)}`);
+  });
 }, 60000);
 
 // Handle graceful shutdown
@@ -74,3 +92,4 @@ const gracefulShutdown = async () => {
 
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
+
